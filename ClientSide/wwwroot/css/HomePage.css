@@ -1,0 +1,538 @@
+﻿:root {
+    --primary: #181818;
+    --accent: #D4A656;
+    --light: #EFEFEF;
+    --text: #2D2D2D;
+    --transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* إعادة تهيئة أساسية */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Tajawal', sans-serif;
+}
+
+body {
+    background: var(--light);
+    color: var(--text);
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    text-align: left;
+}
+
+.container {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* ---------------------------
+   معرض الصور (Hero Gallery)
+------------------------------*/
+.hero-gallery {
+    position: relative;
+    width: 100vw;
+    height: 50vh; /* ارتفاع مناسب للهواتف */
+    overflow: hidden;
+    background: #000;
+}
+
+.gallery-track {
+    display: flex;
+    height: 100%;
+    width: calc(100% * var(--image-count) * 2);
+    animation: scroll 30s linear infinite;
+}
+
+@keyframes scroll {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-50%);
+    }
+}
+.order-reminder-collapsible {
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+    .order-reminder-collapsible .reminder-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .order-reminder-collapsible .reminder-title {
+        font-weight: bold;
+        font-size: 1.2em;
+    }
+
+    .order-reminder-collapsible .toggle-arrow {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.2em;
+    }
+
+    .order-reminder-collapsible .reminder-body {
+        padding-top: 10px;
+        display: none;
+    }
+
+    .order-reminder-collapsible.expanded .reminder-body {
+        display: block;
+    }
+
+.reminder-row {
+    margin-bottom: 8px;
+}
+
+.cancel-order-row {
+    text-align: center;
+}
+
+.cancel-order-btn {
+    background-color: #e74c3c;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.cancel-confirmation {
+    margin-top: 10px;
+    text-align: center;
+    background-color: #f9f9f9;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+    .cancel-confirmation p {
+        margin-bottom: 10px;
+    }
+
+.confirm-btn {
+    background-color: #27ae60;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+.cancel-btn {
+    background-color: #95a5a6;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.gallery-item {
+    flex: 0 0 calc(100% / (var(--image-count) * 2));
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+    .gallery-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain; /* الحفاظ على الصورة كاملة داخل الإطار */
+        object-position: center; /* محاذاة وسطية للصورة */
+        transition: transform 0.5s ease;
+    }
+
+    .gallery-item:hover img {
+        transform: scale(1.05);
+    }
+
+.hero-gallery-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #fff;
+    z-index: 2;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 1.5rem 2rem;
+    border-radius: 10px;
+    opacity: 0;
+    animation: fadeInUp 1s forwards;
+}
+
+.hero-book-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 0.8rem 2rem;
+    font-size: 1rem;
+    border-radius: 28px;
+    cursor: pointer;
+    transition: var(--transition);
+    margin-top: 1rem;
+}
+
+    .hero-book-btn:hover {
+        transform: scale(1.1);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.4);
+    }
+
+@keyframes fadeInUp {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -40%);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}
+
+/* -------------------------------
+   بطاقة الحجز القادم (Order Reminder)
+--------------------------------*/
+.order-reminder-collapsible {
+    position: relative;
+    margin-top: 1rem;
+    animation: slideDown 0.4s ease forwards;
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.1);
+    background: #fff;
+    border: 1px solid #eee;
+}
+
+@keyframes slideDown {
+    0% {
+        transform: translateY(-30px);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.reminder-header {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: #fff;
+    padding: 0.8rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.reminder-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.toggle-arrow {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: #fff;
+    cursor: pointer;
+}
+
+.reminder-body {
+    padding: 0 1rem;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, opacity 0.4s ease;
+}
+
+    .reminder-body.show-body {
+        padding: 1rem;
+        max-height: 500px;
+        opacity: 1;
+    }
+
+.reminder-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.4rem 0;
+    font-size: 0.95rem;
+}
+
+.countdown-row {
+    background: #f7f7f7;
+    border-radius: 8px;
+    padding: 0.5rem;
+}
+
+/* ---------------------------
+   قسم الحلاقين (Master Barbers)
+------------------------------*/
+.master-barbers {
+    padding-bottom: 2rem;
+}
+
+.section-heading {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+    .section-heading::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 120px;
+        height: 3px;
+        background: var(--accent);
+    }
+
+.barbers-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.barber-card {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    padding: 1.5rem;
+    background: var(--primary);
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.avatar-frame {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid var(--accent);
+    flex-shrink: 0;
+}
+
+    .avatar-frame img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+.profile-meta {
+    text-align: center;
+}
+
+    .profile-meta h2 {
+        color: white;
+        font-size: 1.5rem;
+    }
+
+.expertise-level span {
+    color: var(--accent);
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+}
+
+.services-board {
+    padding: 1rem 1.5rem;
+}
+
+.service-block {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    margin: 0.8rem 0;
+    background: var(--light);
+    border-radius: 15px;
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+    .service-block:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+
+.service-info h4 {
+    color: var(--primary);
+    margin-bottom: 0.3rem;
+    font-size: 1rem;
+}
+
+.service-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.9rem;
+}
+
+.price-tag {
+    color: var(--accent);
+    font-weight: bold;
+}
+
+.time-badge {
+    color: #666;
+}
+
+.selected-info {
+    text-align: center;
+    margin: 0.5rem 0;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.elegant-book-btn {
+    width: 100%;
+    padding: 1.2rem;
+    background: var(--primary);
+    color: white;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+    .elegant-book-btn:hover {
+        background: var(--accent);
+    }
+
+.btn-ornament {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2));
+    transform: skewX(-30deg);
+    transition: 0.5s;
+}
+
+.elegant-book-btn:hover .btn-ornament {
+    left: 150%;
+}
+
+/* ---------------------------
+   استجابة الشاشات الصغيرة
+------------------------------*/
+@media (max-width: 600px) {
+    .hero-gallery {
+        height: 50vh;
+        margin: 1rem 0;
+        border-radius: 18px;
+    }
+
+    .hero-gallery-overlay h3 {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        font-weight: 700;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
+        opacity: 0;
+        animation: slideIn 1s forwards;
+        animation-delay: 0.3s;
+    }
+
+    .hero-book-btn {
+        background: var(--accent);
+        border: none;
+        padding: 0.8rem 2.5rem;
+        font-size: 1.2rem;
+        color: #fff;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        pointer-events: auto;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        opacity: 0;
+        animation: slideIn 1s forwards;
+        animation-delay: 0.6s;
+    }
+
+    .section-heading {
+        font-size: 1.8rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .profile-header {
+        padding: 1rem;
+    }
+
+    .avatar-frame {
+        width: 80px;
+        height: 80px;
+    }
+
+    .profile-meta h2 {
+        font-size: 1.3rem;
+    }
+
+    .services-board {
+        padding: 1rem;
+    }
+
+    .service-block {
+        justify-content: space-between;
+        padding: 0.8rem;
+        margin: 0.4rem 0;
+        background: var(--light);
+        border-radius: 10px;
+    }
+
+    .selected-service {
+        background: #d4a65615;
+        border: 1px solid var(--accent);
+        box-shadow: 0 3px 6px rgba(212,166,86,0.2);
+    }
+
+    .select-indicator {
+        font-size: 1.4rem;
+        margin-left: 1rem;
+        color: var(--accent);
+    }
+
+    .service-info h4 {
+        font-size: 0.95rem;
+    }
+
+    .elegant-book-btn {
+        font-size: 0.95rem;
+        padding: 1rem;
+    }
+}
+
+@keyframes slideIn {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

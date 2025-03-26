@@ -1,0 +1,264 @@
+﻿@page "/PhonAuth"
+@using ClientSide.Services.Class
+@using ClientSide.Services.InterFace
+@using Domain.DataTransfareObject
+@using System.Text.RegularExpressions
+@inject IUserService _userservice
+@inject PhoneNumberService PhoneService
+@inject NavigationManager NavigationManager
+@inject AlertService _alert
+@inject LocalizationService Lang
+
+<style>
+    .page-container {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    animation: fadeIn 0.8s ease-in-out;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    h3 {
+    color: #333;
+    margin-bottom: 1rem;
+    }
+
+    .input-box {
+    width: 80%;
+    padding: 0.8rem;
+    font-size: 1.2rem;
+    border: 2px solid #ccc;
+    border-radius: 4px;
+    outline: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    margin-bottom: 1rem;
+    }
+    .input-box:focus {
+    border-color: #0078D7;
+    box-shadow: 0 0 5px rgba(0, 120, 215, 0.5);
+    }
+
+    .save-button, .change-phone-button {
+    padding: 0.8rem 1.5rem;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    margin: 0.5rem;
+    background-color: #28a745;
+    color: #fff;
+    }
+    .save-button:hover, .change-phone-button:hover {
+    background-color: #218838;
+    transform: scale(1.05);
+    }
+
+    .info-message {
+    margin-top: 1rem;
+    padding: 0.8rem;
+    background-color: #e7f3fe;
+    color: #31708f;
+    border: 1px solid #bce8f1;
+    border-radius: 4px;
+    font-size: 1rem;
+    }
+
+    @@keyframes fadeIn {
+    from {
+    opacity: 0;
+    transform: translateY(-10px);
+    }
+    to {
+    opacity: 1;
+    transform: translateY(0);
+    }
+    }
+</style>
+
+<div class="page-container">
+    @if (!isVerificationSent)
+    {
+        <h3>@Lang["EnterPhon"]</h3>
+        <input @bind="UserInput" placeholder="@Lang["placeholder-Exampil"]: 0591234567" type="tel" class="input-box" />
+        <input @bind="UserName" placeholder="@Lang["placeholder-EnterName"]" type="text" class="input-box" />
+        <div>
+            <button @onclick="SendValidation" class="save-button" disabled="@(!canSend)">
+                @if (_isLoading)
+                {
+                    <span>@Lang["Sending"]</span>
+                }
+                else if (!canSend)
+                {
+                    <span>@Lang["SendValdCode"] (@countdown)</span>
+                }
+                else
+                {
+                    <span>@Lang["SendValdCode"]</span>
+                }
+            </button>
+            <button @onclick="UseOldCode" class="save-button">
+                @Lang["Use-BackCode"]
+            </button>
+        </div>
+    }
+    else
+    {
+        <h3>@Lang["Set-PhonNumber-Name"]</h3>
+        <div style="margin-bottom:1rem;">
+            <span style="font-weight:bold;">@Lang["PhonNumber"]</span> @UserInput
+            <button @onclick="ChangePhone" class="change-phone-button">@Lang["PhonNumber-Change"]</button>
+        </div>
+        <input @bind="VerificationCode" placeholder="@Lang["placeholder-Code"]" type="text" class="input-box" />
+        <div>
+            <button @onclick="CheckCode" class="save-button">@Lang["ConfirmCode"]</button>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(infoMessage))
+        {
+            <div class="info-message">
+                @infoMessage
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private string UserInput = "";
+    private string UserName = "";
+    private string VerificationCode = "";
+    private bool isVerificationSent = false;
+
+    private int countdown = 60;
+    private bool canSend = true;
+    private System.Timers.Timer? resendTimer;
+    private bool _isLoading = false;
+    private string infoMessage = "";
+
+    private async Task SendValidation()
+    {
+        if (!canSend)
+        {
+            _alert.ShowAlert(Lang["LoginAlert-Waiting"], AlertType.Error);
+            return;
+        }
+
+        if (!Regex.IsMatch(UserInput, @"^05\d{8}$"))
+        {
+            _alert.ShowAlert(Lang["LoginAlert"], AlertType.Error);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(UserInput) || string.IsNullOrWhiteSpace(UserName))
+        {
+            _alert.ShowAlert(Lang["LoginAlert-InputError"], AlertType.Error);
+            return;
+        }
+
+        var apiTask = _userservice.SendValidtion(UserInput, UserName);
+
+        _isLoading = true;
+        StateHasChanged();
+        await Task.Delay(2000);
+        _isLoading = false;
+
+        isVerificationSent = true;
+        infoMessage = Lang["LoginAlert-Info"];
+        StartTimer();
+        StateHasChanged();
+
+        var res = await apiTask;
+        if (!res.IsSucceeded)
+        {
+            _alert.ShowAlert(Lang["LoginAlert-FaildCodeVal"], AlertType.Error);
+            isVerificationSent = false;
+            infoMessage = "";
+            StateHasChanged();
+        }
+    }
+
+    private void UseOldCode()
+    {
+        if (string.IsNullOrWhiteSpace(UserInput) || string.IsNullOrWhiteSpace(UserName))
+        {
+            _alert.ShowAlert(Lang["LoginAlert-InputError"], AlertType.Error);
+            return;
+        }
+        isVerificationSent = true;
+        infoMessage = Lang["LoginAlert-Info"];
+        StateHasChanged();
+    }
+
+    private async Task CheckCode()
+    {
+        if (string.IsNullOrWhiteSpace(VerificationCode))
+        {
+            _alert.ShowAlert(Lang["LoginAlert-InputCodeError"], AlertType.Error);
+            return;
+        }
+        var res = await _userservice.CheckCode(UserInput, VerificationCode);
+        if (res.IsSucceeded)
+        {
+            if (PhoneService.IsPhoneNumberSaved())
+            {
+                PhoneService.DeletePhoneNumber();
+            }
+            PhoneService.SavePhoneNumber(UserInput);
+            NavigationManager.NavigateTo("/", true);
+        }
+        else
+        {
+            _alert.ShowAlert(Lang["LoginAlert-ErrorCode"], AlertType.Error);
+        }
+    }
+
+    private void ChangePhone()
+    {
+        isVerificationSent = false;
+        infoMessage = "";
+    }
+
+    private void StartTimer()
+    {
+        canSend = false;
+        countdown = 60;
+        if (resendTimer != null)
+        {
+            resendTimer.Stop();
+            resendTimer.Dispose();
+        }
+        resendTimer = new System.Timers.Timer(1000);
+        resendTimer.Elapsed += TimerElapsed;
+        resendTimer.AutoReset = true;
+        resendTimer.Start();
+    }
+
+    private void TimerElapsed(object? sender, System.Timers.ElapsedEventArgs e)
+    {
+        if (countdown > 0)
+        {
+            countdown--;
+            InvokeAsync(StateHasChanged);
+        }
+        else
+        {
+            canSend = true;
+            resendTimer?.Stop();
+            resendTimer?.Dispose();
+            resendTimer = null;
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public void Dispose()
+    {
+        if (resendTimer != null)
+        {
+            resendTimer.Stop();
+            resendTimer.Dispose();
+        }
+    }
+}

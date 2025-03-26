@@ -1,0 +1,403 @@
+﻿@page "/aboutus"
+
+@using Domain.DataTransfareObject
+@using ClientSide.Services.InterFace
+@using Domain.DatabaseModels
+@using System.Diagnostics
+@inject IBarberService BarberService
+@inject IImageService _Video
+@inject IJSRuntime js
+@inject LocalizationService Lang
+
+<style>
+    /* الحاوية العامة */
+    .about-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 1rem;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        direction: rtl;
+        text-align: center;
+    }
+
+    /* الصورة الرئيسية للمحل */
+    .main-image {
+        width: 100%;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        margin-bottom: 1rem;
+    }
+
+    /* بطاقة معلومات المحل */
+    .shop-info {
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        animation: fadeIn 0.8s ease-in-out;
+    }
+
+        .shop-info h2 {
+            margin: 0.5rem 0;
+            color: #333;
+        }
+
+    .shop-details {
+        text-align: left;
+        margin: 0.5rem 0;
+        font-size: 0.95rem;
+        color: #555;
+        line-height: 1.4;
+    }
+
+        .shop-details p {
+            margin: 0.3rem 0;
+        }
+
+    /* صف الأيقونات */
+    .icon-row {
+        margin-top: 0.5rem;
+    }
+
+        .icon-row img {
+            width: 32px;
+            height: 32px;
+            margin: 0 0.5rem;
+        }
+
+    /* زر رابط Waze */
+    .waze-button {
+        display: inline-block;
+        background-color: #0a84ff;
+        color: #fff;
+        padding: 0.6rem 1rem;
+        border-radius: 4px;
+        text-decoration: none;
+        font-size: 0.95rem;
+        margin-top: 1rem;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+        .waze-button:hover {
+            background-color: #006fce;
+            transform: scale(1.05);
+        }
+
+    /* قائمة الحلاقين - بطاقات */
+    .barber-list {
+        margin: 1rem 0;
+    }
+
+    .barber-card {
+        display: inline-block;
+        background-color: #0078D7;
+        color: #fff;
+        padding: 0.8rem 1.2rem;
+        border-radius: 6px;
+        margin: 0.3rem;
+        cursor: pointer;
+        transition: transform 0.2s ease, background-color 0.3s ease;
+        font-size: 0.95rem;
+    }
+
+        .barber-card:hover {
+            transform: scale(1.05);
+            background-color: #005fa3;
+        }
+
+    /* جدول المواعيد */
+    .schedule-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+
+        .schedule-table th,
+        .schedule-table td {
+            border: 1px solid #ddd;
+            padding: 0.5rem;
+            text-align: center;
+        }
+
+        .schedule-table th {
+            background-color: #f2f2f2;
+        }
+
+    /* حقوق المبرمج */
+    .developer-rights {
+        text-align: center;
+        font-size: 0.8rem;
+        color: #999;
+        margin-top: 1rem;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* معرض الفيديوهات */
+    .video-gallery {
+        margin: 2rem auto;
+        position: relative;
+        max-width: 600px;
+    }
+
+        .video-gallery h3 {
+            margin-bottom: 1rem;
+            text-align: center;
+            color: #333;
+        }
+
+    .video-slider {
+        position: relative;
+        overflow: hidden;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        max-width: 100%;
+        margin: 0 auto;
+    }
+
+    .video-thumbnail {
+        width: 100%;
+        height: auto;
+        display: block;
+        object-fit: cover;
+    }
+
+    .arrow {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 2rem;
+        color: white;
+        background: rgba(0, 0, 0, 0.5);
+        padding: 0.5rem;
+        border-radius: 50%;
+        cursor: pointer;
+        user-select: none;
+    }
+
+        .arrow.left {
+            left: 10px;
+        }
+
+        .arrow.right {
+            right: 10px;
+        }
+
+        .arrow:hover {
+            background: rgba(0, 0, 0, 0.7);
+        }
+</style>
+
+<div class="about-container">
+    <!-- الصورة الرئيسية للمحل -->
+    <img src="Image/HelloBelloImage.jpg" alt="صورة المحل" class="main-image" />
+
+    <!-- بطاقة معلومات المحل -->
+    <div class="shop-info">
+        <h2>@Lang["Place"] HairBello</h2>
+        <div dir="rtl" class="shop-details">
+            <p><strong>מיקום :</strong> כפר מנדא, רחוב אל-מור </p>
+            <p>
+                <strong>  בעל חנות:  </strong> אמיר פרחאת
+            </p>
+            <p><strong>מספר טלפון:</strong> 050-446-6866</p>
+        </div>
+        <div class="icon-row">
+            <img src="https://cdn-icons-png.flaticon.com/512/3173/3173680.png" alt="مقص" class="icon" />
+            <img src="https://cdn-icons-png.flaticon.com/512/3173/3173672.png" alt="موس" class="icon" />
+            <img src="https://cdn-icons-png.flaticon.com/512/3173/3173675.png" alt="مشط" class="icon" />
+        </div>
+        <a class="waze-button" href="https://ul.waze.com/ul?ll=32.80903434,35.26773548&navigate=yes&zoom=16" target="_blank">
+            @Lang["Waze"] Waze
+        </a>
+    </div>
+
+    <!-- قائمة الحلاقين -->
+    <div class="barber-list">
+        <h3>@Lang["Chose-BarberDate"]</h3>
+        @if (Barbers != null && Barbers.Any())
+        {
+            @foreach (var barber in Barbers)
+            {
+                <div class="barber-card" @onclick="@(() => SelectBarber(barber.Id))">
+                    @barber.Name
+                </div>
+            }
+        }
+        else
+        {
+            <p>@Lang["Loading-Barber"]</p>
+        }
+    </div>
+
+    <!-- عرض جدول مواعيد الحلاق المختار -->
+    @if (SelectedBarber != null)
+    {
+        <h4>@Lang["BarberDates"] @SelectedBarber.Name</h4>
+        <table class="schedule-table">
+            <thead>
+                <tr>
+                    <th>@Lang["BarberDates"]</th>
+                    <th>@Lang["From-Time"]</th>
+                    <th>@Lang["End-Time"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (SelectedBarber.BarberSchedules != null && SelectedBarber.BarberSchedules.Any())
+                {
+                    @foreach (var schedule in SelectedBarber.BarberSchedules)
+                    {
+                        <tr>
+                            <td>@TranslateDay(schedule.DayName)</td>
+                            <td>@schedule.StartHour.ToString(@"hh\:mm")</td>
+                            <td>@schedule.EndHour.ToString(@"hh\:mm")</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="3">@Lang["No-BarberTable"]</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    <!-- معرض الفيديوهات -->
+    <div class="video-gallery">
+        <h3>@Lang["video-gallery-Title"]</h3>
+        @if (GalleryVideos != null && GalleryVideos.Any())
+        {
+            <div class="video-slider">
+                <video id="autoVideo" class="video-thumbnail" autoplay muted controls playsinline>
+                    <source src="@GalleryVideos[currentVideoIndex].Base64Url" type="video/mp4" />
+                    @Lang["video-gallery-Error"]
+                </video>
+                <div class="arrow left" @onclick="PreviousVideo">&#10094;</div>
+                <div class="arrow right" @onclick="NextVideo">&#10095;</div>
+            </div>
+        }
+        else
+        {
+            <p>@Lang["video-gallery-NoVed"]</p>
+        }
+    </div>
+
+    <!-- حقوق المبرمج -->
+    <div class="developer-rights">
+        &copy; حقوق المبرمج: علي زيدان
+    </div>
+</div>
+
+<script>
+    function playVideo() {
+        const video = document.getElementById("autoVideo");
+        if (video) {
+            // تأكد من تعيين muted من JS كـ احتياط
+            video.muted = true;
+            video.play().catch(err => {
+                console.warn("Autoplay failed:", err);
+            });
+        }
+    }
+</script>
+
+@code {
+    private List<BarberModel>? Barbers;
+    private BarberModel? SelectedBarber;
+    private List<PreviewImageModel> GalleryVideos = new();
+    private int currentVideoIndex = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // جلب قائمة الحلاقين
+        var result = await BarberService.GetBarberListAsync();
+        if (result.IsSucceeded && result.Value != null)
+        {
+            Barbers = result.Value;
+        }
+        else
+        {
+            Barbers = new List<BarberModel>();
+        }
+
+        // جلب قائمة الفيديوهات من الخدمة
+        await LoadGalleryVideos();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // عند أول مرة تُحمل الصفحة
+            await js.InvokeVoidAsync("playVideo");
+        }
+    }
+
+    private async Task LoadGalleryVideos()
+    {
+        var result = await _Video.GetVideos();
+        if (result.IsSucceeded && result.Value != null)
+        {
+            // اختيار العناصر التي تحمل فيديوهات فقط
+            GalleryVideos = result.Value.Where(v => v.IsVideo).ToList();
+
+            foreach (var item in GalleryVideos)
+            {
+                Debug.WriteLine(item.Base64Url);
+            }
+        }
+    }
+
+    private void SelectBarber(int barberId)
+    {
+        SelectedBarber = Barbers?.FirstOrDefault(b => b.Id == barberId);
+    }
+
+    private string TranslateDay(string day)
+    {
+        return day.ToLower() switch
+        {
+            "sunday" => "الأحد",
+            "monday" => "الإثنين",
+            "tuesday" => "الثلاثاء",
+            "wednesday" => "الأربعاء",
+            "thursday" => "الخميس",
+            "friday" => "الجمعة",
+            "saturday" => "السبت",
+            _ => day
+        };
+    }
+
+    private async Task NextVideo()
+    {
+        if (GalleryVideos.Any())
+        {
+            currentVideoIndex = (currentVideoIndex + 1) % GalleryVideos.Count;
+            // بعد تغيير مصدر الفيديو, اطلب تشغيله من جديد
+            await js.InvokeVoidAsync("playVideo");
+        }
+    }
+
+    private async Task PreviousVideo()
+    {
+        if (GalleryVideos.Any())
+        {
+            currentVideoIndex = (currentVideoIndex - 1 + GalleryVideos.Count) % GalleryVideos.Count;
+            // بعد تغيير مصدر الفيديو, اطلب تشغيله من جديد
+            await js.InvokeVoidAsync("playVideo");
+        }
+    }
+}

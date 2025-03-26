@@ -1,0 +1,526 @@
+﻿@page "/OrdersManagement"
+
+@using ClientSide.Services.Class
+@using ClientSide.Services.InterFace
+@inject IOrderService _OrderService
+@inject IBarberService _BarberService
+@inject AlertService _Alert
+@inject IJSRuntime JSRuntime
+@inject DateTimeService dateTimeService
+
+@using Domain.DataTransfareObject
+@using Domain.DatabaseModels
+@using System.Globalization
+
+<div class="orders-management-wrapper">
+    <h2 class="title">إدارة الحجوزات</h2>
+    <p class="subtitle">
+        اختر الحلاق والتاريخ المطلوب ثم اضغط "تحميل المزيد" لجلب الحجوزات.
+    </p>
+
+    <!-- قسم الاختيارات (الحلاق + التاريخ) -->
+    <div class="filters-wrapper">
+        <!-- اختيار الحلاق -->
+        <div class="filter-block">
+            <label for="barbers" class="filter-label">الحلاق:</label>
+            <select id="barbers" class="dropdown"  @onchange="OnBarberChange">
+                <option value="">-- اختر حلاق --</option>
+                @if (barbers != null)
+                {
+                    @foreach (var barber in barbers)
+                    {
+                        <option value="@barber.Id">@barber.Name</option>
+                    }
+                }
+            </select>
+        </div>
+
+        <!-- اختيار التاريخ (6 أيام فقط) -->
+        <div class="filter-block">
+            <label for="dates" class="filter-label">التاريخ:</label>
+            <select id="dates" class="dropdown" @onchange="OnDateChange">
+                <option value="">-- اختر تاريخ --</option>
+                @foreach (var dateOption in dateOptions)
+                {
+                    <option value="@dateOption.ToString("yyyy-MM-dd" )">
+                        @dateOption.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)
+                    </option>
+                }
+            </select>
+        </div>
+    </div>
+
+    <!-- قائمة الأوردارات -->
+    <div class="orders-list">
+        @if (selectedBarberId == 0 || selectedDate == default)
+        {
+            <div class="no-data">يرجى اختيار الحلاق والتاريخ.</div>
+        }
+        else if (orders == null || orders.Count == 0)
+        {
+            <div class="no-data">لا يوجد حجوزات لهذا اليوم.</div>
+        }
+        else
+        {
+            @foreach (var order in orders)
+            {
+                <div class="order-card">
+                    <div class="order-header">
+                        <span class="order-id">حجز #@order.Id</span>
+                        <button class="btn danger btn-delete" @onclick="@(() => DeleteOrder(order.Id))">حذف</button>
+                    </div>
+
+                    <div class="order-details">
+                        <div class="detail">
+                            <strong>التاريخ:</strong>
+                            <span dir="rtl">@order.Date.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture)</span>
+                        </div>
+                        <div class="detail">
+                            <strong>من:</strong>
+                            <span dir="rtl">@order.FromTime.ToString("HH:mm")</span>
+                            <strong>إلى:</strong>
+                            <span dir="rtl">@order.ToTime.ToString("HH:mm")</span>
+                        </div>
+                        <div class="detail price-row">
+                            <strong>المبلغ:</strong>
+                            <span dir="rtl">@order.TotalPrice شيكل</span>
+                        </div>
+                        <div class="detail">
+                            <strong>اسم العميل:</strong>
+                            <span dir="rtl">@order.User?.Name</span>
+                        </div>
+                        <div class="detail phone-row">
+                            <strong>رقم العميل:</strong>
+                            <span dir="rtl">@order.User?.PhoneNumber</span>
+                            <button class="btn small copy-btn" @onclick="@(() => CopyPhoneNumber(order.User?.PhoneNumber))">
+                                نسخ
+                            </button>
+                        </div>
+                        <!-- عرض تفاصيل الخدمات -->
+                        @if (orderServicesDetails.ContainsKey(order.Id))
+                        {
+                            <div class="order-services">
+                                <strong>الخدمات:</strong>
+                                @foreach (var service in orderServicesDetails[order.Id])
+                                {
+                                    <div class="service-detail">
+                                        <span>@service.Title</span> - <span>@service.Price شيكل</span>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="order-services">
+                                <span>جاري تحميل تفاصيل الخدمات...</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    <!-- زر تحميل المزيد -->
+    @if (hasMore && selectedBarberId != 0 && selectedDate != default)
+    {
+        <div class="load-more-section">
+            <button class="btn primary" @onclick="LoadMoreOrders">تحميل المزيد</button>
+        </div>
+    }
+</div>
+
+<style>
+    /* الخط */
+    @@import url("https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap");
+
+    body, button, select, input {
+        font-family: 'Tajawal', sans-serif;
+    }
+
+    .orders-management-wrapper {
+        max-width: 500px;
+        margin: 0.5rem auto;
+        padding: 1rem;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        animation: fadeInUp 0.4s ease;
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .title {
+        text-align: center;
+        font-size: 1.4rem;
+        margin-bottom: 0.3rem;
+        color: #333;
+    }
+
+    .subtitle {
+        text-align: center;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+        color: #666;
+    }
+
+    /* حاوية الفلاتر (الحلاق + التاريخ) */
+    .filters-wrapper {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        justify-content: center;
+        margin-bottom: 1.2rem;
+    }
+
+    .filter-block {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .filter-label {
+        margin-bottom: 0.3rem;
+        font-size: 0.85rem;
+        color: #555;
+        font-weight: 600;
+    }
+
+    .dropdown {
+        padding: 0.4rem 0.6rem;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        border: 1px solid #ddd;
+        transition: border-color 0.2s;
+    }
+
+        .dropdown:focus {
+            outline: none;
+            border-color: #6200ee;
+        }
+
+    /* قائمة الأوردارات */
+    .orders-list {
+        margin-top: 1rem;
+    }
+
+    .no-data {
+        text-align: center;
+        font-style: italic;
+        color: #999;
+        margin: 0.8rem 0;
+    }
+
+    /* البطاقة */
+    .order-card {
+        background: #fafafa;
+        border-radius: 6px;
+        margin-bottom: 0.7rem;
+        padding: 0.6rem;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        animation: fadeIn 0.3s ease;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.3rem;
+    }
+
+    .order-id {
+        font-weight: 700;
+        color: #333;
+        font-size: 1rem;
+    }
+
+    .order-details {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+
+    .detail {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.3rem;
+        font-size: 0.88rem;
+        color: #444;
+        align-items: baseline;
+    }
+
+    .price-row span {
+        color: #e91e63;
+        font-weight: 700;
+    }
+
+    .phone-row {
+        align-items: center;
+    }
+
+    /* تفاصيل الخدمات */
+    .order-services {
+        margin-top: 0.5rem;
+        padding-top: 0.5rem;
+        border-top: 1px solid #ddd;
+        font-size: 0.85rem;
+        color: #555;
+    }
+
+    .service-detail {
+        margin-top: 0.2rem;
+    }
+
+    /* أزرار */
+    .btn {
+        border: none;
+        border-radius: 4px;
+        padding: 0.45rem 0.8rem;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+
+    .primary {
+        background-color: #6200ee;
+        color: #fff;
+    }
+
+    .danger {
+        background-color: #e53935;
+        color: #fff;
+    }
+
+    .small {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.75rem;
+    }
+
+    .copy-btn {
+        background: #ffca28;
+        color: #333;
+    }
+
+    .btn-delete {
+        font-size: 0.7rem;
+        padding: 0.3rem 0.6rem;
+    }
+
+    /* زر تحميل المزيد */
+    .load-more-section {
+        text-align: center;
+        margin: 1rem 0;
+    }
+
+    /* تحسين عرض للهاتف (max-width: 600px) */
+    @@media (max-width: 600px) {
+        .orders-management-wrapper {
+            margin: 0.5rem;
+            padding: 0.8rem;
+            max-width: 95%;
+        }
+
+        .filters-wrapper {
+            gap: 0.5rem;
+        }
+
+        .detail {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .order-id {
+            font-size: 1rem;
+        }
+    }
+</style>
+
+@code {
+    private List<BarberModel> barbers = new();
+    private List<OrderModel> orders = new();
+
+    // تخزين خيارات التواريخ (اليوم + 5 أيام قادمة)
+    private List<DateTime> dateOptions = new();
+    private DateTime selectedDate = default;
+    private int selectedBarberId;
+
+    private int startIndex = 0;
+    private const int PageSize = 20; // كل مرة نجلب 20 أوردر
+    private bool hasMore; // هل يوجد المزيد للتحميل
+
+    // تخزين تفاصيل الخدمات لكل أوردر
+    private Dictionary<int, List<ServiceModel>> orderServicesDetails = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBarbersAsync();
+        GenerateDateOptions();
+    }
+
+    // إنشاء قائمة الأيام القادمة (اليوم + 5 أيام)
+    private void GenerateDateOptions()
+    {
+        var today = DateTime.Today;
+        for (int i = 0; i < 6; i++)
+        {
+            dateOptions.Add(today.AddDays(i));
+        }
+    }
+
+    private async Task LoadBarbersAsync()
+    {
+        var barbersResult = await _BarberService.GetBarberListAsync();
+        if (barbersResult.IsSucceeded && barbersResult.Value != null)
+        {
+            barbers = barbersResult.Value;
+        }
+        else
+        {
+            _Alert.ShowAlert("فشل في جلب قائمة الحلاقين", AlertType.Error);
+        }
+    }
+
+    private async Task OnBarberChange(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var barberId))
+        {
+            selectedBarberId = barberId;
+            ResetOrdersList();
+            await TryFetchOrders();
+        }
+    }
+
+    private async Task OnDateChange(ChangeEventArgs e)
+    {
+        if (DateTime.TryParse(e.Value?.ToString(), out var dateVal))
+        {
+            selectedDate = dateVal.Date;
+            ResetOrdersList();
+            await TryFetchOrders();
+        }
+    }
+
+    private void ResetOrdersList()
+    {
+        startIndex = 0;
+        orders.Clear();
+        orderServicesDetails.Clear();
+        hasMore = false;
+    }
+
+    private async Task TryFetchOrders()
+    {
+        if (selectedBarberId == 0 || selectedDate == default)
+            return;
+
+        await LoadMoreOrders();
+    }
+
+    private async Task LoadMoreOrders()
+    {
+        var req = new GetElementsLimtedDto
+            {
+                Start = startIndex,
+                End = startIndex + (PageSize - 1),
+                BarberId = selectedBarberId,
+                date = selectedDate
+            };
+
+        var result = await _OrderService.GetOrdersLimited(req);
+        if (result.IsSucceeded && result.Value != null)
+        {
+            var fetchedOrders = result.Value;
+            orders.AddRange(fetchedOrders);
+
+            // لكل أوردر، قم بتحميل تفاصيل الخدمات
+            foreach (var order in fetchedOrders)
+            {
+                await LoadOrderServicesDetails(order);
+            }
+
+            // إذا جلبنا عدد سجلات يساوي PageSize، نفترض بوجود المزيد
+            if (fetchedOrders.Count == PageSize)
+            {
+                hasMore = true;
+                startIndex += PageSize;
+            }
+            else
+            {
+                hasMore = false;
+            }
+        }
+        else
+        {
+            _Alert.ShowAlert(result.Comment ?? "فشل في جلب الحجوزات", AlertType.Error);
+        }
+    }
+
+    // دالة لتحميل تفاصيل الخدمات لأوردر محدد
+    private async Task LoadOrderServicesDetails(OrderModel order)
+    {
+        var services = new List<ServiceModel>();
+        foreach (var orderService in order.OrderServices)
+        {
+            var serviceResult = await _BarberService.GetServiceByID(orderService.ServiceId);
+            if (serviceResult.IsSucceeded && serviceResult.Value != null)
+            {
+                services.Add(serviceResult.Value);
+            }
+        }
+        orderServicesDetails[order.Id] = services;
+        StateHasChanged();
+    }
+
+    private async Task DeleteOrder(int orderId)
+    {
+        var result = await _OrderService.CanselOrder(orderId);
+        if (result.IsSucceeded)
+        {
+            _Alert.ShowAlert("تم حذف الحجز بنجاح", AlertType.Success);
+            var toRemove = orders.FirstOrDefault(o => o.Id == orderId);
+            if (toRemove != null)
+            {
+                orders.Remove(toRemove);
+                orderServicesDetails.Remove(orderId);
+            }
+        }
+        else
+        {
+            _Alert.ShowAlert(result.Comment ?? "فشل في حذف الحجز", AlertType.Error);
+        }
+    }
+
+    private async Task CopyPhoneNumber(string phoneNumber)
+    {
+        if (string.IsNullOrWhiteSpace(phoneNumber))
+            return;
+
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", phoneNumber);
+        _Alert.ShowAlert($"تم نسخ رقم الهاتف: {phoneNumber}", AlertType.Success);
+    }
+}

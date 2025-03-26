@@ -1,0 +1,136 @@
+﻿/************************************************
+ * 1) الحاوية العامة للتنبيهات (أسفل يمين)
+ ************************************************/
+.alert-container {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    /* إذا أردت عرض التنبيهات فوق بعضها، 
+       ضع "flex-direction: column-reverse;" 
+       بحيث يخرج الجديد من الأسفل للأعلى */
+}
+
+/************************************************
+ * 2) التنبيه العام
+ ************************************************/
+.custom-alert {
+    /* خلفية داكنة نصف شفافة */
+    background-color: rgba(0, 0, 0, 0.85);
+    color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    /* الحجم والمسافات */
+    min-width: 250px;
+    max-width: 90vw; /* يناسب الشاشات الصغيرة */
+    padding: 1rem 2.5rem 1rem 1rem;
+    position: relative;
+    overflow: hidden;
+}
+
+    /************************************************
+ * 3) تمييز الأنواع (اختياري)
+ ************************************************/
+    .custom-alert.info {
+        border-left: 4px solid #2196f3; /* أزرق */
+    }
+
+    .custom-alert.success {
+        border-left: 4px solid #4caf50; /* أخضر */
+    }
+
+    .custom-alert.error {
+        border-left: 4px solid #f44336; /* أحمر */
+    }
+
+/************************************************
+ * 4) زر الإغلاق (×)
+ ************************************************/
+.close-button {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.75rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #ffffff90;
+    font-size: 1.2rem;
+    transition: color 0.2s;
+}
+
+    .close-button:hover {
+        color: #fff;
+    }
+
+/************************************************
+ * 5) محتوى الرسالة
+ ************************************************/
+.message-content {
+    font-size: 0.95rem;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+/************************************************
+ * 6) عرض/إخفاء التنبيه مع الحركة من الأسفل
+ ************************************************/
+/* عند الظهور (show-alert) */
+.custom-alert.show-alert {
+    animation: bounceInUp 0.8s forwards;
+}
+/* عند الإخفاء (hide-alert) */
+.custom-alert.hide-alert {
+    animation: bounceOutDown 0.8s forwards;
+}
+
+/************************************************
+ * 7) الحركات (Keyframes)
+ ************************************************/
+/* انميشن دخول (سلايد + بونس للأعلى) */
+@keyframes bounceInUp {
+    0% {
+        transform: translateY(150%);
+        opacity: 0.5;
+    }
+
+    60% {
+        transform: translateY(-10%);
+        opacity: 1;
+    }
+
+    80% {
+        transform: translateY(5%);
+    }
+
+    100% {
+        transform: translateY(0);
+    }
+}
+
+/* انميشن خروج (سلايد للأسفل) */
+@keyframes bounceOutDown {
+    20% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(150%);
+        opacity: 0;
+    }
+}
+
+/************************************************
+ * 8) تناسب أفضل مع الهواتف
+ ************************************************/
+@media (max-width: 400px) {
+    .custom-alert {
+        width: 90%;
+        min-width: auto;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}

@@ -1,0 +1,788 @@
+﻿@page "/ImagesManagement"
+@using ClientSide.Services.Class
+@using ClientSide.Services.InterFace
+@inject IImageService _ImageService
+@inject AlertService _Alert
+@inject IJSRuntime JSRuntime
+
+@using Domain.DataTransfareObject
+@using Domain.DatabaseModels
+@using Microsoft.AspNetCore.Components.Forms
+@using System.Net.Http.Headers
+@using System.IO
+
+<div class="images-management-wrapper">
+
+    <h2 class="title">إدارة الصور والفيديوهات</h2>
+    <p class="subtitle">يمكنك عرض وإضافة وتعديل وحذف الصور والفيديوهات بسهولة.</p>
+
+    <!-- إضافة صورة جديدة -->
+    <div class="add-image-section">
+        <h4>إضافة صورة جديدة</h4>
+        <div class="add-image-row">
+            <!-- اختيار ملف الصورة -->
+            <InputFile OnChange="OnSelectNewImage" multiple="false" accept="image/*" />
+
+            <!-- عرض المعاينة إن وجدت -->
+            @if (!string.IsNullOrWhiteSpace(newImageBase64))
+            {
+                <img src="@newImageBase64" class="image-preview" alt="معاينة الصورة" />
+            }
+        </div>
+        <button class="btn primary"
+                @onclick="AddImage"
+                disabled="@(!CanAddNewImage)">
+            إضافة الصورة
+        </button>
+    </div>
+
+    <hr />
+
+    <!-- عرض قائمة الصور -->
+    <div class="images-list">
+        @if (images == null || images.Count == 0)
+        {
+            <div class="no-data">لا توجد صور حاليًا.</div>
+        }
+        else
+        {
+            @foreach (var img in images)
+            {
+                <div class="image-card">
+                    <img src="@img.Base64Url"
+                         alt="صورة"
+                         class="image-thumbnail"
+                         @onclick="@(() => ShowLargeImage(img.Base64Url))" />
+
+                    <div class="card-actions">
+                        <button class="btn danger" @onclick="@(() => DeleteImage(img.Id))">حذف</button>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    <hr />
+
+    <!-- إضافة فيديو جديد -->
+    <div class="add-video-section">
+        <h4>إضافة فيديو جديد</h4>
+        <div class="add-video-row">
+            <InputFile id="videoInput" OnChange="OnSelectNewVideo" accept="video/*" />
+            @if (!string.IsNullOrEmpty(videoFileName))
+            {
+                <p><strong>تم اختيار الملف:</strong> @videoFileName</p>
+            }
+        </div>
+        <button class="btn primary"
+                @onclick="AddVideo"
+                disabled="@(selectedVideoFile is null || isUploadingVideo)">
+            رفع الفيديو
+        </button>
+        @if (isUploadingVideo)
+        {
+            <div class="upload-progress">
+                <div class="progress-bar" style="width:@uploadProgress%"></div>
+                <span>تحميل الفيديو: @uploadProgress%</span>
+            </div>
+        }
+    </div>
+
+    <!-- عرض قائمة الفيديوهات الحالية -->
+    <div class="videos-list">
+        <h4>الفيديوهات الحالية</h4>
+        @if (videos == null || videos.Count == 0)
+        {
+            <div class="no-data">لا توجد فيديوهات حالياً.</div>
+        }
+        else
+        {
+            @foreach (var vid in videos)
+            {
+                <div class="video-card">
+                    <video controls class="video-thumbnail">
+                        <source src="@vid.Base64Url" type="video/mp4" />
+                        المتصفح الخاص بك لا يدعم تشغيل الفيديو.
+                    </video>
+                    <div class="card-actions">
+                        <button class="btn danger" @onclick="@(() => DeleteVideo(vid.Id))">حذف الفيديو</button>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    <!-- نافذة تعديل الصورة (Modal) -->
+    @if (editingImageId != 0)
+    {
+        <div class="modal-backdrop">
+            <div class="modal-content">
+                <h4>تعديل الصورة</h4>
+
+                <InputFile OnChange="OnSelectEditImage" multiple="false" accept="image/*" />
+
+                @if (!string.IsNullOrWhiteSpace(editingImageBase64))
+                {
+                    <img src="@editingImageBase64" class="image-preview" alt="معاينة الصورة" />
+                }
+
+                <div class="modal-actions">
+                    <button class="btn success" @onclick="SaveEdit">حفظ</button>
+                    <button class="btn secondary" @onclick="CancelEdit">إلغاء</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- نافذة تكبير الصورة (Modal) -->
+    @if (showLargeImage)
+    {
+        <div class="modal-backdrop">
+            <div class="modal-content large-image-modal">
+                <img src="@largeImageBase64" alt="Large Image" class="large-view" />
+                <button class="btn secondary" @onclick="CloseLargeImage">إغلاق</button>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- سكريبت للتحقق من مدة الفيديو باستخدام JS interop -->
+<script>
+    window.getVideoDuration = (inputElementId) => {
+        return new Promise((resolve, reject) => {
+            var input = document.getElementById(inputElementId);
+            if (input.files.length == 0) {
+                resolve(0);
+                return;
+            }
+            var file = input.files[0];
+            var url = URL.createObjectURL(file);
+            var video = document.createElement('video');
+            video.preload = 'metadata';
+            video.src = url;
+            video.onloadedmetadata = function () {
+                URL.revokeObjectURL(video.src);
+                resolve(video.duration);
+            };
+            video.onerror = function () {
+                reject("Error loading video metadata");
+            };
+        });
+    };
+</script>
+
+<style>
+    /* الحاوية العامة */
+    .images-management-wrapper {
+        max-width: 600px;
+        margin: 1rem auto;
+        padding: 1rem;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        animation: fadeInUp 0.4s ease;
+    }
+
+    @@keyframes fadeInUp {
+        from
+
+    {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    }
+
+    .title {
+        text-align: center;
+        font-size: 1.3rem;
+        margin-bottom: 0.5rem;
+        color: #333;
+    }
+
+    .subtitle {
+        text-align: center;
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 1.2rem;
+    }
+
+    /* أقسام إضافة الصور والفيديوهات */
+    .add-image-section, .add-video-section {
+        margin-bottom: 1rem;
+        background: #fafafa;
+        padding: 0.8rem;
+        border-radius: 6px;
+    }
+
+        .add-image-section h4, .add-video-section h4 {
+            margin-bottom: 0.5rem;
+            color: #444;
+        }
+
+    .add-image-row, .add-video-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.8rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .image-preview {
+        max-width: 100px;
+        max-height: 100px;
+        border-radius: 6px;
+        object-fit: cover;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    /* قائمة الصور */
+    .images-list {
+        margin-top: 1rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 1rem;
+    }
+
+    /* قائمة الفيديوهات */
+    .videos-list {
+        margin-top: 1rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .no-data {
+        text-align: center;
+        font-style: italic;
+        color: #999;
+    }
+
+    .image-card, .video-card {
+        background: #f9f9f9;
+        border-radius: 6px;
+        padding: 0.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        transition: background 0.2s;
+    }
+
+        .image-card:hover, .video-card:hover {
+            background: #f0f0f0;
+        }
+
+    .image-thumbnail {
+        width: 100%;
+        height: auto;
+        border-radius: 4px;
+        cursor: pointer;
+        object-fit: cover;
+        margin-bottom: 0.5rem;
+        transition: transform 0.3s;
+    }
+
+    .video-thumbnail {
+        width: 100%;
+        height: auto;
+        border-radius: 4px;
+        object-fit: cover;
+        margin-bottom: 0.5rem;
+    }
+
+    .image-thumbnail:hover {
+        transform: scale(1.02);
+    }
+
+    .card-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    /* الأزرار */
+    .btn {
+        border: none;
+        border-radius: 4px;
+        padding: 0.45rem 0.7rem;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+    .primary {
+        background-color: #6200ee;
+        color: #fff;
+    }
+
+    .secondary {
+        background-color: #9e9e9e;
+        color: #fff;
+    }
+
+    .success {
+        background-color: #4caf50;
+        color: #fff;
+    }
+
+    .warning {
+        background-color: #ffca28;
+        color: #333;
+    }
+
+    .danger {
+        background-color: #e53935;
+        color: #fff;
+    }
+
+    /* شريط تحميل الفيديو */
+    .upload-progress {
+        margin-top: 0.5rem;
+        background: #e0e0e0;
+        border-radius: 4px;
+        position: relative;
+        height: 20px;
+        width: 100%;
+    }
+
+    .progress-bar {
+        background: #6200ee;
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.3s;
+    }
+
+    .upload-progress span {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 0.8rem;
+        color: #fff;
+        line-height: 20px;
+    }
+
+    /* النافذة (Modal) */
+    .modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.6);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 999;
+    }
+
+    .modal-content {
+        background: #fff;
+        border-radius: 6px;
+        padding: 1rem;
+        max-width: 90%;
+        max-height: 80%;
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+        overflow-y: auto;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        animation: zoomIn 0.3s ease;
+    }
+
+    @@keyframes zoomIn {
+        from
+
+    {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .large-image-modal {
+        align-items: center;
+    }
+
+    .large-view {
+        max-width: 90vw;
+        max-height: 70vh;
+        border-radius: 6px;
+        object-fit: contain;
+        margin-bottom: 1rem;
+    }
+
+    /* استجابة للشاشات الأصغر */
+    @@media (max-width: 600px) {
+        .images-management-wrapper
+
+    {
+        margin: 0.5rem;
+        padding: 0.8rem;
+    }
+
+    .add-image-row, .add-video-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .image-preview {
+        max-width: 80px;
+        max-height: 80px;
+    }
+
+    .images-list {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 0.8rem;
+    }
+
+    .large-view {
+        max-width: 95vw;
+        max-height: 60vh;
+    }
+
+    }
+</style>
+
+@code {
+    // ======== قائمة الصور والفيديوهات ========
+    private List<PreviewImageModel> images = new();
+    private List<PreviewImageModel> videos = new();
+
+    // ======== إدارة الصورة الجديدة ========
+    private IBrowserFile newImageFile;         // الملف المختار للإضافة
+    private string newImageBase64;            // للمعاينة فقط
+    private bool CanAddNewImage => !string.IsNullOrWhiteSpace(newImageBase64);
+
+    // ======== إدارة تعديل الصورة ========
+    private int editingImageId;
+    private IBrowserFile editingImageFile;     // الملف المختار للتعديل
+    private string editingImageBase64;        // للمعاينة فقط
+
+    // ======== تكبير الصورة ========
+    private bool showLargeImage;
+    private string largeImageBase64;
+
+    // ======== إدارة الفيديو ========
+    private IBrowserFile selectedVideoFile;
+    private string videoFileName;
+    private bool isUploadingVideo = false;
+    private int uploadProgress = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadImages();
+        await LoadVideos();
+    }
+
+    // جلب الصور من السيرفر
+    private async Task LoadImages()
+    {
+        var result = await _ImageService.GetImages();
+        if (result.IsSucceeded && result.Value != null)
+        {
+            images = result.Value;
+        }
+        else
+        {
+            // معالجة الخطأ أو عرض تنبيه
+        }
+    }
+
+    // جلب الفيديوهات من السيرفر
+    private async Task LoadVideos()
+    {
+        var result = await _ImageService.GetVideos();
+        if (result.IsSucceeded && result.Value != null)
+        {
+            videos = result.Value;
+        }
+        else
+        {
+            // معالجة الخطأ أو عرض تنبيه
+        }
+    }
+
+    /* ===================== عند اختيار صورة جديدة ===================== */
+    private async Task OnSelectNewImage(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            if (!file.ContentType.StartsWith("image/"))
+            {
+                _Alert.ShowAlert("الرجاء اختيار ملف صورة فقط!", AlertType.Error);
+                return;
+            }
+
+            // لأغراض المعاينة فقط نحولها إلى Base64
+            using var ms = new MemoryStream();
+            await file.OpenReadStream(5 * 1024 * 1024).CopyToAsync(ms);
+
+            newImageBase64 = $"data:{file.ContentType};base64,{Convert.ToBase64String(ms.ToArray())}";
+            newImageFile = file;
+        }
+    }
+
+    /* ===================== إضافة صورة جديدة ===================== */
+    private async Task AddImage()
+    {
+        if (newImageFile is not null)
+        {
+            // نبني MultipartFormDataContent
+            var content = new MultipartFormDataContent();
+            using var stream = newImageFile.OpenReadStream(5 * 1024 * 1024);
+            var streamContent = new StreamContent(stream);
+            streamContent.Headers.ContentType = new MediaTypeHeaderValue(newImageFile.ContentType);
+
+            // (اسم الحقل) يجب أن يكون بنفس ما ينتظره السيرفر
+            content.Add(streamContent, "File", newImageFile.Name);
+
+            var req = new CreatePreviewImageDto
+                {
+                    File = content
+                };
+
+            var result = await _ImageService.AddImage(req);
+            if (result.IsSucceeded)
+            {
+                _Alert.ShowAlert("تمت إضافة الصورة بنجاح", AlertType.Success);
+                newImageBase64 = string.Empty;
+                newImageFile = null;
+                await LoadImages();
+            }
+            else
+            {
+                _Alert.ShowAlert(result.Comment ?? "فشل في إضافة الصورة", AlertType.Error);
+            }
+        }
+    }
+
+    /* ===================== حذف الصورة ===================== */
+    private async Task DeleteImage(int id)
+    {
+        var result = await _ImageService.RemoveImage(id);
+        if (result.IsSucceeded)
+        {
+            _Alert.ShowAlert("تم حذف الصورة بنجاح", AlertType.Success);
+            await LoadImages();
+        }
+        else
+        {
+            _Alert.ShowAlert(result.Comment ?? "فشل في حذف الصورة", AlertType.Error);
+        }
+    }
+
+    /* ===================== نافذة التعديل: بدء التعديل ===================== */
+    // private void StartEdit(PreviewImageModel img)
+    // {
+    //     editingImageId = img.Id;
+    //     // نعرض الصورة الحالية في حال لم يغير المستخدم الصورة
+    //     editingImageBase64 = img.Base64Url;
+    //     editingImageFile = null;
+    // }
+
+    /* ===================== عند اختيار صورة جديدة أثناء التعديل ===================== */
+    private async Task OnSelectEditImage(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            if (!file.ContentType.StartsWith("image/"))
+            {
+                _Alert.ShowAlert("الرجاء اختيار ملف صورة فقط!", AlertType.Error);
+                return;
+            }
+
+            using var ms = new MemoryStream();
+            await file.OpenReadStream(5 * 1024 * 1024).CopyToAsync(ms);
+
+            editingImageBase64 = $"data:{file.ContentType};base64,{Convert.ToBase64String(ms.ToArray())}";
+            editingImageFile = file;
+        }
+    }
+
+    /* ===================== حفظ التعديل ===================== */
+    private async Task SaveEdit()
+    {
+        if (editingImageId > 0 && editingImageFile != null)
+        {
+            // نبني الـ MultipartFormDataContent مع الملف الجديد
+            var content = new MultipartFormDataContent();
+            using var stream = editingImageFile.OpenReadStream(5 * 1024 * 1024);
+            var streamContent = new StreamContent(stream);
+            streamContent.Headers.ContentType = new MediaTypeHeaderValue(editingImageFile.ContentType);
+            content.Add(streamContent, "File", editingImageFile.Name);
+
+            var req = new UpdatePreviewImageDto
+                {
+                    Id = editingImageId,
+                    File = content
+                };
+
+            var result = await _ImageService.EditImage(req);
+            if (result.IsSucceeded)
+            {
+                _Alert.ShowAlert("تم تعديل الصورة بنجاح", AlertType.Success);
+                editingImageId = 0;
+                editingImageBase64 = string.Empty;
+                editingImageFile = null;
+                await LoadImages();
+            }
+            else
+            {
+                _Alert.ShowAlert(result.Comment ?? "فشل في تعديل الصورة", AlertType.Error);
+            }
+        }
+        else
+        {
+            // في حال لم يتم اختيار ملف جديد، يمكن إما تجاهل الحفظ أو وضع منطق آخر
+            editingImageId = 0;
+            editingImageBase64 = string.Empty;
+            editingImageFile = null;
+        }
+    }
+
+    private void CancelEdit()
+    {
+        editingImageId = 0;
+        editingImageBase64 = string.Empty;
+        editingImageFile = null;
+    }
+
+    /* ===================== تكبير الصورة ===================== */
+    private void ShowLargeImage(string base64Url)
+    {
+        showLargeImage = true;
+        largeImageBase64 = base64Url;
+    }
+    private void CloseLargeImage()
+    {
+        showLargeImage = false;
+        largeImageBase64 = string.Empty;
+    }
+
+    /* ===================== إضافة فيديو جديد ===================== */
+    private async Task OnSelectNewVideo(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            if (!file.ContentType.StartsWith("video/"))
+            {
+                _Alert.ShowAlert("الرجاء اختيار ملف فيديو فقط!", AlertType.Error);
+                selectedVideoFile = null;
+                videoFileName = null;
+                return;
+            }
+
+            // التحقق من مدة الفيديو عبر JS interop
+            try
+            {
+                double duration = await JSRuntime.InvokeAsync<double>("getVideoDuration", "videoInput");
+                if (duration > 20)
+                {
+                    _Alert.ShowAlert("الرجاء اختيار فيديو لا يتجاوز 20 ثانية!", AlertType.Error);
+                    selectedVideoFile = null;
+                    videoFileName = null;
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                _Alert.ShowAlert("فشل التحقق من مدة الفيديو: " + ex.Message, AlertType.Error);
+                selectedVideoFile = null;
+                videoFileName = null;
+                return;
+            }
+
+            selectedVideoFile = file;
+            videoFileName = file.Name;
+        }
+    }
+
+    private async Task AddVideo()
+    {
+        if (selectedVideoFile is null)
+            return;
+
+        try
+        {
+            isUploadingVideo = true;
+            uploadProgress = 0;
+            // محاكاة تقدّم رفع الفيديو
+            var progressTask = Task.Run(async () =>
+            {
+                while (isUploadingVideo && uploadProgress < 90)
+                {
+                    await Task.Delay(300);
+                    uploadProgress += 5;
+                    await InvokeAsync(StateHasChanged);
+                }
+            });
+
+            using var stream = selectedVideoFile.OpenReadStream(maxAllowedSize: 100 * 1024 * 1024);
+            var content = new MultipartFormDataContent();
+            var streamContent = new StreamContent(stream);
+            streamContent.Headers.ContentType = new MediaTypeHeaderValue(selectedVideoFile.ContentType);
+            content.Add(streamContent, "file", selectedVideoFile.Name);
+
+            var result = await _ImageService.AddVideo(content);
+            isUploadingVideo = false;
+            uploadProgress = 100;
+            await progressTask;
+
+            if (result.IsSucceeded)
+            {
+                _Alert.ShowAlert("تم رفع الفيديو بنجاح", AlertType.Success);
+                selectedVideoFile = null;
+                videoFileName = null;
+                await LoadVideos();
+            }
+            else
+            {
+                _Alert.ShowAlert(result.Comment ?? "فشل في رفع الفيديو", AlertType.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            isUploadingVideo = false;
+            _Alert.ShowAlert($"حدث خطأ أثناء رفع الفيديو: {ex.Message}", AlertType.Error);
+        }
+    }
+
+    /* ===================== حذف الفيديو ===================== */
+    private async Task DeleteVideo(int id)
+    {
+        var result = await _ImageService.DeleteVideo(id);
+        if (result.IsSucceeded)
+        {
+            _Alert.ShowAlert("تم حذف الفيديو بنجاح", AlertType.Success);
+            await LoadVideos();
+            await InvokeAsync(StateHasChanged);
+        }
+        else
+        {
+            _Alert.ShowAlert(result.Comment ?? "فشل في حذف الفيديو", AlertType.Error);
+        }
+    }
+}

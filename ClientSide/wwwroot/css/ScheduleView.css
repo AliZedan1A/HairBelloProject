@@ -1,0 +1,187 @@
+﻿:root {
+    --primary: #181818;
+    --accent: #D4A656;
+    --light: #EFEFEF;
+    --text: #2D2D2D;
+    --transition: all 0.3s ease;
+}
+
+/* شريط علوي (Navbar) بسيط */
+.navbar-schedule {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--primary);
+    color: #fff;
+    padding: 0.8rem 1rem;
+}
+
+.btn-nav {
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.navbar-title {
+    font-size: 1.2rem;
+    margin: 0;
+}
+
+.schedule-container {
+    max-width: 420px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+/* أسهم التنقل بين الأيام */
+.day-switcher {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    gap: 1rem;
+}
+
+.arrow-btn {
+    background: var(--light);
+    border: 1px solid #ccc;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    color: var(--primary);
+    transition: var(--transition);
+}
+
+    .arrow-btn:disabled {
+        opacity: 0.4;
+        cursor: default;
+    }
+
+    .arrow-btn:hover:not(:disabled) {
+        background: #e0e0e0;
+        transform: scale(1.05);
+    }
+
+/* اليوم المعروض */
+.current-day {
+    text-align: center;
+    line-height: 1.2;
+}
+
+.day-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.day-date {
+    font-size: 0.9rem;
+    color: #555;
+}
+
+/* قسم الأوقات */
+.schedule-board {
+    margin-top: 0.5rem;
+}
+
+.times-heading {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    color: var(--primary);
+    text-align: center;
+}
+
+.chosen-date {
+    color: var(--accent);
+    font-weight: 600;
+    margin-right: 0.3rem;
+}
+
+.loading-area {
+    text-align: center;
+    font-size: 1rem;
+    color: #666;
+    margin: 1rem 0;
+}
+
+.no-slots {
+    text-align: center;
+    font-size: 0.9rem;
+    color: #888;
+}
+
+/* قائمة الأوقات بشكل عمودي */
+.slots-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 300px; /* حد أقصى لارتفاع القائمة */
+    overflow-y: auto; /* تمرير عمودي عند كثرة الأوقات */
+    padding: 0.2rem;
+    /* تمكين تسارع اللمس (Momentum Scrolling) في iOS */
+    -webkit-overflow-scrolling: touch;
+}
+
+.slot-item {
+    background: var(--light);
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    font-size: 0.9rem;
+    color: var(--primary);
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.slots-list::-webkit-scrollbar {
+    width: 6px; /* سماكة شريط التمرير العمودي */
+}
+.slots-list::-webkit-scrollbar-track {
+    background: #f1f1f1; /* خلفية المسار */
+    border-radius: 3px;
+}
+
+.slots-list::-webkit-scrollbar-thumb {
+    background: var(--accent); /* لون الشريط */
+    border-radius: 3px;
+}
+
+    .slots-list::-webkit-scrollbar-thumb:hover {
+        background: #c29548; /* لون الشريط عند اللمس/السحب */
+    }
+
+
+    .slot-item:hover {
+        background: #eaeaea;
+    }
+
+.selected-slot {
+    background: var(--accent);
+    color: #fff;
+}
+
+/* زر التأكيد أسفل الصفحة */
+.confirm-area {
+    margin-top: 1.2rem;
+    text-align: center;
+}
+
+.confirm-btn {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    padding: 0.8rem 2rem;
+    font-size: 1rem;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+    .confirm-btn:hover {
+        background: var(--accent);
+        transform: translateY(-2px);
+    }

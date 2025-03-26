@@ -1,0 +1,226 @@
+﻿@page "/{BarberId:int}/ScheduleView/{Services}/{TotalPrice:int}"
+@using ClientSide.Services.Class
+@using ClientSide.Services.InterFace
+@using Domain.DataTransfareObject
+@using Domain.DatabaseModels
+@using System.Globalization
+@using Microsoft.Maui.Storage
+@using Domain.Models
+
+@inject IBarberSchedule _BarberSchedule
+@inject IOrderService _OrderService
+@inject AlertService _AlertService
+@inject NavigationManager _NavigationManager
+@inject PhoneNumberService PhoneService
+@inject DateTimeService dateTimeService
+@inject LocalizationService Lang
+
+
+<div class="navbar-schedule">
+    <button class="btn-nav" @onclick="GoBack">@Lang["back"]</button>
+    <h2 class="navbar-title">@Lang["AvailbleTimes"]</h2>
+    <div style="width: 2.5rem;"></div>
+</div>
+
+<div class="schedule-container">
+    <!-- اختيار ليوم -->
+    <div class="day-switcher">
+        <button class="arrow-btn" disabled="@(SelectedIndex == 0)" @onclick="PrevDay">‹</button>
+        <div class="current-day">
+            <div class="day-name">@Days[SelectedIndex].DayName</div>
+        </div>
+        <button class="arrow-btn" disabled="@(SelectedIndex == Days.Count - 1)" @onclick="NextDay">›</button>
+    </div>
+
+    <!-- الاوقات -->
+    <div class="schedule-board">
+        <h3 class="times-heading">
+            الأوقات المتاحة لـ
+            <span class="chosen-date">
+                @Days[SelectedIndex].Date.ToString("MM/dd/yyyy")
+            </span>
+        </h3>
+
+        @if (IsLoading)
+        {
+            <div class="loading-area">@Lang["Loading"]</div>
+        }
+        else
+        {
+            @if (AvailableSlots is null || AvailableSlots.Count == 0)
+            {
+                <p class="no-slots">@Lang["LoadTimes"]</p>
+            }
+            else
+            {
+                <div class="slots-list">
+                    @foreach (var slot in AvailableSlots)
+                    {
+                        <div class="slot-item @(SelectedSlot == slot ? "selected-slot" : "")"
+                        @onclick="() => OnSlotSelected(slot)">
+                            @slot.Start 
+                        </div>
+                    }
+                </div>
+            }
+        }
+    </div>
+
+    <!-- زر التأكيد أسفل الشاشة - يظهر فقط عند اختيار وقت -->
+    @if (SelectedSlot is not null)
+    {
+        <div class="confirm-area">
+            <button class="confirm-btn" @onclick="ConfirmBooking">@Lang["ComfirmOrder"]</button>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int BarberId { get; set; }
+    [Parameter] public string Services { get; set; }  // IDs مفصولة بفواصل
+    [Parameter] public int TotalPrice { get; set; }
+    private List<(DateTime Date, string DayName)> Days = new();
+    private int SelectedIndex { get; set; } = 0; // يُمثل اليوم الحالي في القائمة
+    private string PhoneNumber = "";
+    private bool IsLoading { get; set; } = false;
+    private List<AvailableSlotModel>? AvailableSlots { get; set; } = new();
+    private AvailableSlotModel? SelectedSlot { get; set; }
+
+    protected override Task OnInitializedAsync()
+    {
+        PhoneNumber = PhoneService.GetPhoneNumber();
+
+        LoadDays(7);  // 7 أيام للأمام
+        // تحميل الأوقات لأول يوم (اليوم) كخطوة مبدئية
+        _ = LoadAvailableSlotsAsync(Days[SelectedIndex].Date);
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    // إنشاء 7 أيام (من اليوم + 6 أيام)
+    private void LoadDays(int numberOfDays)
+    {
+
+        var today = dateTimeService.IsraelNow();
+        for (int i = 0; i < numberOfDays; i++)
+        {
+            var date = today.AddDays(i);
+            Days.Add((date, GetArabicDayName(date)));
+        }
+    }
+
+    private string GetArabicDayName(DateTime date)
+    {
+        return date.ToString("dddd", new CultureInfo("ar-SA"));
+    }
+
+    private string GetEngDayName(DateTime date)
+    {
+        return date.ToString("dddd", new CultureInfo("en-US"));
+    }
+
+    private async Task LoadAvailableSlotsAsync(DateTime date)
+    {
+        IsLoading = true;
+        AvailableSlots = new();
+        try
+        {
+            var dayName = GetEngDayName(date);
+            var result = await _BarberSchedule.GetScheduleByDay(BarberId, dayName, Services, date);
+
+            if (result.IsSucceeded && result.Value is not null)
+            {
+                // for(int x =0;x<result.Value.Count;x++)
+                // {
+                //     DateTime startDateTime = dateTimeService.ConvertUtcToIsrael(DateTime.ParseExact(result.Value[x].Start, "HH:mm", null));
+                //     DateTime endDateTime = dateTimeService.ConvertUtcToIsrael(DateTime.ParseExact(result.Value[x].End, "HH:mm", null));
+
+                //     result.Value[x].Start = startDateTime.ToString("HH:mm");
+                //     result.Value[x].End = endDateTime.ToString("HH:mm");
+
+                // }
+                AvailableSlots = result.Value;
+            }
+        }
+        catch (Exception ex)
+        {
+        }
+        finally
+        {
+            IsLoading = false;
+            StateHasChanged();
+
+        }
+    }
+
+    private async Task PrevDay()
+    {
+        if (SelectedIndex > 0)
+        {
+            SelectedIndex--;
+            SelectedSlot = null;
+            await LoadAvailableSlotsAsync(Days[SelectedIndex].Date);
+        }
+    }
+
+    private async Task NextDay()
+    {
+        if (SelectedIndex < Days.Count - 1)
+        {
+            SelectedIndex++;
+            SelectedSlot = null;
+            await LoadAvailableSlotsAsync(Days[SelectedIndex].Date);
+        }
+    }
+
+    private void OnSlotSelected(AvailableSlotModel slot)
+    {
+        SelectedSlot = slot;
+    }
+
+    private async Task ConfirmBooking()
+    {
+        var list = Services
+        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+        .Select(int.Parse)
+        .ToList();
+        List<CreateOrderServiceDto> ServiceList = list.Select(x => new CreateOrderServiceDto() {
+                ServiceId = x,
+            }).ToList();
+
+        Console.WriteLine($"حجز: {Days[SelectedIndex].Date}, من {SelectedSlot.Start} إلى {SelectedSlot.End}, خدمات = {Services}");
+        DateTime today = DateTime.Today; // اليوم بدون وقت
+
+        DateTime startDateTime = DateTime.ParseExact(SelectedSlot.Start, "HH:mm", null);
+        DateTime endDateTime = DateTime.ParseExact(SelectedSlot.End, "HH:mm", null);
+
+
+        var response  = await _OrderService.SetOrderAsync(new()
+        {
+            BarberId =  BarberId,
+                Services = ServiceList,
+                FromTime = startDateTime,
+                ToTime = endDateTime,
+                TotalPrice = TotalPrice,
+                PhonNumber = PhoneNumber,
+                Date = Days[SelectedIndex].Date
+                
+        });
+        if(!response.IsSucceeded)
+        {
+            _AlertService.ShowAlert(response.Comment);
+        }
+        else
+        {
+            _AlertService.ShowAlert(Lang["HomeAlert-sucss"], AlertType.Success);
+
+            _NavigationManager.NavigateTo("/");
+
+        }
+    }
+
+    private void GoBack()
+    {
+        _NavigationManager.NavigateTo("/");
+    }
+}

@@ -1,0 +1,138 @@
+﻿/******************************************/
+/*       ألوان وخطوط - إعدادات عامة       */
+/******************************************/
+:root {
+    --primary-color: #6200ee; /* لون أساسي */
+    --secondary-color: #3700b3; /* لون ثانوي */
+    --bg-color: #f2f2f2; /* لون خلفية عام */
+    --text-color: #333; /* لون النص الافتراضي */
+    --white: #ffffff;
+    --border-radius: 8px;
+    --transition-duration: 0.3s;
+}
+
+/* لضبط الخط للعربية (اختياري) */
+body, button, input, textarea {
+    font-family: 'Tajawal', sans-serif; /* مثال لخط عربي */
+}
+
+/******************************************/
+/*         حاوية كاملة للصفحة             */
+/******************************************/
+.admin-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* بحيث تملأ الصفحة طول الشاشة */
+    background: var(--bg-color);
+}
+
+/******************************************/
+/*             رأس الصفحة                */
+/******************************************/
+.admin-header {
+    background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+    text-align: center;
+    color: var(--white);
+    padding: 1rem;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+    border-bottom-left-radius: var(--border-radius);
+    border-bottom-right-radius: var(--border-radius);
+}
+
+    .admin-header h2 {
+        margin: 0;
+        font-size: 1.4rem;
+    }
+
+/******************************************/
+/*          القائمة السفلية/العلوية       */
+/******************************************/
+.admin-nav {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background-color: var(--white);
+    box-shadow: 0 -3px 6px rgba(0, 0, 0, 0.1);
+    border-top-left-radius: var(--border-radius);
+    border-top-right-radius: var(--border-radius);
+    /* في حال أردت القائمة بالأعلى عكِّس الحدود: 
+       border-bottom-left-radius 
+       border-bottom-right-radius 
+    */
+}
+
+.nav-btn {
+    flex: 1;
+    text-align: center;
+    padding: 0.7rem 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--text-color);
+    font-size: 0.85rem;
+    transition: background var(--transition-duration), transform var(--transition-duration);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-radius: var(--border-radius);
+}
+
+    .nav-btn .icon {
+        font-size: 1.2rem;
+        margin-bottom: 3px;
+    }
+
+    .nav-btn.active {
+        background-color: var(--primary-color);
+        color: var(--white);
+        transform: scale(1.05);
+    }
+
+    .nav-btn:hover {
+        background: #f9f9f9;
+    }
+
+/******************************************/
+/*          منطقة عرض المحتوى             */
+/******************************************/
+.admin-content {
+    flex: 1; /* لتمدد المحتوى حسب المساحة المتبقية */
+    padding: 1rem;
+    margin: 0.5rem;
+    background: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden; /* لإخفاء أجزاء الرسوم المتحركة الزائدة */
+}
+
+/* أنيميشن بسيطة عند الظهور */
+.animate-fade-in {
+    animation: fadeIn var(--transition-duration) ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/******************************************/
+/*        تصميم متجاوب للشاشات الصغيرة    */
+/******************************************/
+@media (max-width: 600px) {
+    .admin-nav {
+        flex-direction: row; /* تبقى في صف واحد ،
+                                 وإن أردتها عموديًا: column */
+    }
+
+    .nav-btn {
+        font-size: 0.75rem;
+    }
+}

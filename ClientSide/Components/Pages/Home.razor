@@ -1,0 +1,390 @@
+﻿@page "/"
+@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
+@inject IBarberService _BarberService
+@inject AlertService _Alert
+@inject IImageService _ImageService
+@inject IOrderService _OrderService
+@inject PhoneNumberService PhoneService
+@inject DateTimeService dateTimeService
+@inject IUserService _userservice
+@inject LocalizationService Lang
+
+
+@using Microsoft.Maui.ApplicationModel.Communication;
+@using System.Timers
+@using ClientSide.Services.Class
+@using ClientSide.Services.InterFace
+@using Domain.DatabaseModels
+
+<div class="hero-gallery" style="--image-count: @previewImages.Count;">
+    <div class="gallery-track">
+        @foreach (var img in previewImages)
+        {
+            <div class="gallery-item">
+                <img src="@img.Base64Url" alt="عمل الحلاق" />
+            </div>
+        }
+        @foreach (var img in previewImages)
+        {
+            <div class="gallery-item">
+                <img src="@img.Base64Url" alt="عمل الحلاق" />
+            </div>
+        }
+    </div>
+    <div class="hero-gallery-overlay">
+        <h3>@Lang["Title"]</h3>
+        <button class="hero-book-btn" @onclick="CallOwner">@Lang["Call"]</button>
+    </div>
+</div>
+
+<div class="container">
+    <!-- الحجز الحالي -->
+    @if (hasActiveOrder)
+    {
+        <div class="order-reminder-collapsible @(isExpanded ? "expanded" : "")">
+            <div class="reminder-header">
+                <div class="reminder-title">@Lang["reminder-title"]</div>
+                <div>
+                    <button class="toggle-arrow" @onclick="ToggleExpand">
+                        @if (isExpanded)
+                        {
+                            <span>&#9652;</span>
+                        }
+                        else
+                        {
+                            <span>&#9662;</span>
+                        }
+                    </button>
+                </div>
+            </div>
+            <div class="reminder-body @(isExpanded ? "show-body" : "")">
+                <div class="reminder-row">
+                    <strong>@Lang["reminder-Day"]</strong>
+                    <span dir="rtl">@($"{lastOrder.Date:dd/MM/yyyy}")</span>
+                </div>
+                <div class="reminder-row">
+                    <strong>@Lang["reminder-Time"]</strong>
+                    <span dir="rtl">@($"{lastOrder.FromTime:HH:mm} - {lastOrder.ToTime:HH:mm}")</span>
+                </div>
+                <div class="reminder-row">
+                    <strong>@Lang["reminder-Price"]</strong>
+                    <span dir="rtl">@($"{lastOrder.TotalPrice} {Lang["SHIKL"]}")</span>
+                </div>
+                <div class="reminder-row countdown-row">
+                    <strong>@Lang["reminder-countdown"]</strong>
+                    <span>@CountdownText</span>
+                </div>
+                <!-- زر إلغاء الحجز -->
+                <div class="reminder-row cancel-order-row">
+                    <button class="cancel-order-btn" @onclick="ShowCancelConfirmation">@Lang["cancel-order"]</button>
+                </div>
+                <!-- نافذة التأكيد -->
+                @if (showCancelConfirmation)
+                {
+                    <div class="cancel-confirmation">
+                        <p>@Lang["cancel-confirmation"]</p>
+                        <button class="confirm-btn" @onclick="ConfirmCancelOrder">@Lang["confirm-btn"]</button>
+                        <button class="cancel-btn" @onclick="HideCancelConfirmation">@Lang["cancel-btn"]</button>
+                    </div>
+                }
+            </div>
+        </div>
+        <br />
+    }
+
+    <!-- قسم الحلاقين -->
+    <div class="master-barbers">
+        <h1 class="section-heading">@Lang["section-heading"]</h1>
+        <div class="barbers-grid">
+            @if (barbers is null || barbers.Count == 0)
+            {
+                <h1>@Lang["NoBarbers"]</h1>
+            }
+            else
+            {
+                @foreach (var barber in barbers)
+                {
+                    <div class="barber-card">
+                        <div class="profile-header">
+                            <div class="avatar-frame">
+                                <img src="Image/logo.jpg" alt="شعار الحلاق" />
+                            </div>
+                            <div class="profile-meta">
+                                <h2>@barber.Name</h2>
+                                <div class="expertise-level">
+                                    <span>@Lang["barber"]</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="services-board">
+                            @foreach (var service in barber.Services)
+                            {
+                                <div class="service-block @(IsServiceSelected(barber.Id, service.Id) ? "selected-service" : "")"
+                                @onclick="() => ToggleService(barber.Id, service.Id)">
+                                    <div class="service-info">
+                                        <h4>@service.Title</h4>
+                                        <div class="service-meta">
+                                            <span dir="rtl" class="price-tag">@($" {service.Price} {Lang["SHIKL"]}")</span>
+                                            <span dir="rtl" class="time-badge">@($" {service.Time} {Lang["Mints"]}")</span>
+                                        </div>
+                                    </div>
+                                    <div class="select-indicator">
+                                        @(IsServiceSelected(barber.Id, service.Id) ? "✔" : "○")
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        @if (selectedBarberId == barber.Id && selectedServiceIds.Count > 0)
+                        {
+                            var (totalPrice, totalTime) = CalculateTotals();
+                            @if (!hasActiveOrder)
+                            {
+                                <div class="selected-info">
+                                    <span dir="rtl">@Lang["selected-info-totalprice"] @($" {totalPrice} {Lang["SHIKL"]}")</span>
+                                    <span dir="rtl" style="margin-left: 1rem;">@Lang["selected-info-totalTime"] @($" {totalTime} {Lang["Mints"]}")</span>
+                                </div>
+                                <button class="elegant-book-btn" @onclick="OpenBooking">
+                                    <span>@Lang["OrderNow"]</span>
+                                    <div class="btn-ornament"></div>
+                                </button>
+                            }
+                            else
+                            {
+                                <div class="selected-info">
+                                    <span>@Lang["selected-info"]</span>
+                                </div>
+                            }
+                        }
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<BarberModel> barbers = new();
+    private List<PreviewImageModel> previewImages = new();
+    private bool IsAuth = true;
+    private bool showCancelConfirmation = false;
+    private OrderModel lastOrder;
+    private bool hasActiveOrder = false;
+    private bool isExpanded = false;
+    private Timer countdownTimer;
+    private string currentLang = "ar";
+    private string CountdownText = "";
+    private void ShowCancelConfirmation()
+    {
+        showCancelConfirmation = true;
+    }
+    private void HideCancelConfirmation()
+    {
+        showCancelConfirmation = false;
+    }
+    private async Task ConfirmCancelOrder()
+    {
+        showCancelConfirmation = false;
+
+        var result = await _OrderService.CanselOrder(lastOrder.Id);
+        if (result.IsSucceeded)
+        {
+            await CheckLastOrderAsync();
+            _Alert.ShowAlert(Lang["HomeAlert-Cansel"], AlertType.Success);
+        }
+        else
+        {
+            _Alert.ShowAlert(Lang["HomeAlert-ErrorOrder"], AlertType.Error);
+        }
+    }
+
+    private int? selectedBarberId = null;
+    private List<int> selectedServiceIds = new();
+
+    protected async override Task OnInitializedAsync()
+    {
+
+        var phon = PhoneService.GetPhoneNumber();
+        if (phon is null)
+        {
+            NavigationManager.NavigateTo("/PhonAuth");
+        }
+        else
+        {
+            var response = await _userservice.GetUserByPhonNumber(phon);
+            if (response.IsSucceeded)
+            {
+                IsAuth = true;
+                await CheckLastOrderAsync();
+            }
+            else
+            {
+                NavigationManager.NavigateTo("/PhonAuth");
+            }
+        }
+
+        var ret = await _ImageService.GetImages();
+        if (ret.IsSucceeded)
+        {
+            previewImages = ret.Value;
+        }
+        else
+        {
+            previewImages = new List<PreviewImageModel>
+            {
+                new PreviewImageModel { Base64Url = "https://via.placeholder.com/800x600.png?text=Image+1" },
+                new PreviewImageModel { Base64Url = "https://via.placeholder.com/800x600.png?text=Image+2" },
+                new PreviewImageModel { Base64Url = "https://via.placeholder.com/800x600.png?text=Image+3" }
+            };
+        }
+
+        var req = await _BarberService.GetBarberListAsync();
+        if (req.IsSucceeded)
+            barbers = req.Value;
+        else
+            _Alert.ShowAlert(Lang["HomeAlert-FaildBarberFitch"], AlertType.Error);
+    }
+    private void SetLang(string lang)
+    {
+        StaticValues.LangSelected = lang;
+    }
+    private async Task CheckLastOrderAsync()
+    {
+        var result = await _OrderService.GetLastOrder(PhoneService.GetPhoneNumber());
+        if (result.IsSucceeded && result.Value != null)
+        {
+            lastOrder = result.Value;
+            hasActiveOrder = true;
+            StartDayHourMinuteSecondCountdown();
+        }
+        else
+        {
+            hasActiveOrder = false;
+        }
+    }
+
+    private void StartDayHourMinuteSecondCountdown()
+    {
+        if (countdownTimer != null)
+            countdownTimer.Dispose();
+
+        countdownTimer = new Timer(1000);
+        countdownTimer.Elapsed += async (s, e) =>
+        {
+            var now = dateTimeService.IsraelNow();
+            var diff = lastOrder.FromTime - now;
+            var days = lastOrder.Date - now;
+
+            if (diff.TotalSeconds <= 0 || now.Date < lastOrder.Date.Date)
+            {
+                int daysh = days.Days + 1;
+                if(StaticValues.LangSelected =="ar")
+                {
+                    CountdownText = $"باقي {daysh} من الايام";
+                    await InvokeAsync(StateHasChanged);
+
+                }
+                else
+                {
+                    CountdownText = $"נשארו עוד {daysh} ימים";
+                    await InvokeAsync(StateHasChanged);
+
+                }
+            }
+            else
+            {
+                int daysh = days.Days;
+                int hours = diff.Hours;
+                int mins = diff.Minutes;
+                int secs = diff.Seconds;
+                if(secs==1&& mins ==0&& hours ==0)
+                {
+                    await CheckLastOrderAsync();
+                }
+                if (StaticValues.LangSelected == "ar")
+                {
+                    CountdownText = $"باقي {daysh} من الايام و {hours} ساعة و {mins} دقيقة و {secs} ثانية";
+                    await InvokeAsync(StateHasChanged);
+
+                }
+                else
+                {
+                    CountdownText = $"נשארו עוד {daysh} ימים, {hours} שעות, {mins} דקות ו-{secs} שניות";
+                    await InvokeAsync(StateHasChanged);
+
+                }
+            }
+        };
+        countdownTimer.Start();
+    }
+
+    private void ToggleExpand()
+    {
+        isExpanded = !isExpanded;
+    }
+
+    private bool IsServiceSelected(int barberId, int serviceId)
+        => (selectedBarberId == barberId) && selectedServiceIds.Contains(serviceId);
+
+    private void ToggleService(int barberId, int serviceId)
+    {
+        if (selectedBarberId != barberId)
+        {
+            selectedBarberId = barberId;
+            selectedServiceIds.Clear();
+        }
+        if (selectedServiceIds.Contains(serviceId))
+        {
+            selectedServiceIds.Remove(serviceId);
+            if (selectedServiceIds.Count == 0)
+                selectedBarberId = null;
+        }
+        else
+        {
+            selectedServiceIds.Add(serviceId);
+        }
+    }
+
+    private (double totalPrice, int totalTime) CalculateTotals()
+    {
+        double priceSum = 0;
+        int timeSum = 0;
+
+        if (selectedBarberId != null)
+        {
+            var barber = barbers.FirstOrDefault(b => b.Id == selectedBarberId.Value);
+            if (barber != null)
+            {
+                foreach (var serviceId in selectedServiceIds)
+                {
+                    var service = barber.Services.FirstOrDefault(s => s.Id == serviceId);
+                    if (service != null)
+                    {
+                        priceSum += service.Price;
+                        timeSum += service.Time;
+                    }
+                }
+            }
+        }
+        return (priceSum, timeSum);
+    }
+
+    private async Task CallOwner()
+    {
+        try
+        {
+            PhoneDialer.Open("050-446-6866");
+        }
+        catch (Exception ex)
+        {
+            _Alert.ShowAlert(Lang["HomeAlert-CantDoCall"], AlertType.Error);
+        }
+    }
+
+    private void OpenBooking()
+    {
+        var servicesQuery = string.Join(",", selectedServiceIds);
+        var (totalPrice, totalTime) = CalculateTotals();
+        NavigationManager.NavigateTo($"/{selectedBarberId}/ScheduleView/{servicesQuery}/{totalPrice}");
+    }
+}

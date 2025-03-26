@@ -1,0 +1,433 @@
+﻿@page "/past-orders"
+
+@using ClientSide.Services.InterFace
+@using Domain.DatabaseModels
+@using System.Text
+@inject IOrderService _orders
+
+<h3 class="page-title">سجل الحجوزات السابقة</h3>
+
+<!-- اختيار المدى الزمني (من - إلى) -->
+<div class="date-range-container">
+    <label>من:</label>
+    <input type="date"
+           @bind-value="FromDate"
+           @bind-value:format="yyyy-MM-dd"
+           min="@minAllowedDateString"
+           max="@todayString" />
+
+    <label>إلى:</label>
+    <input type="date"
+           @bind-value="ToDate"
+           @bind-value:format="yyyy-MM-dd"
+           min="@minAllowedDateString"
+           max="@todayString" />
+
+    <button class="action-button" @onclick="LoadOrders">عرض الطلبات</button>
+</div>
+
+<!-- إظهار مؤشر تحميل أثناء جلب البيانات -->
+@if (isLoading)
+{
+    <div class="loading-indicator">جاري التحميل ...</div>
+}
+
+<!-- إحصائيات أعلى القائمة -->
+@if (orders is { Count: > 0 } && !isLoading)
+{
+    <div class="stats-container fade-in">
+        <div class="stat-item">
+            <span class="stat-label">إجمالي الحجوزات:</span>
+            <span class="stat-value">@orders.Count</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">عدد الحجوزات غير الملغاة:</span>
+            <span class="stat-value">@notCancelledCount</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">العائد المادي (بدون الملغاة):</span>
+            <span class="stat-value">@totalRevenue.ToString("0.00")</span>
+        </div>
+    </div>
+}
+
+<!-- عرض قائمة الطلبات -->
+@if (!isLoading && orders is { Count: > 0 })
+{
+    <div class="orders-list">
+        @foreach (var order in orders)
+        {
+            <div class="order-card @(order.IsCansled ? "canceled" : "") fade-in-up">
+                <div class="order-info">
+                    <div><strong>اسم العميل:</strong> @order.User?.Name</div>
+                    <div><strong>رقم الهاتف:</strong> @order.User?.PhoneNumber</div>
+                    <div><strong>حالة الحجز:</strong> @(order.IsCansled ? "ملغى" : "غير ملغى")</div>
+                    <div><strong>التاريخ:</strong> @order.Date.ToShortDateString()</div>
+                    <div>
+                        <strong>من:</strong> @order.FromTime.ToShortTimeString()
+                        <strong>إلى:</strong> @order.ToTime.ToShortTimeString()
+                    </div>
+                    <div><strong>السعر الكلي:</strong> @order.TotalPrice</div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <button class="download-button" @onclick="DownloadOrdersAsCsv">تحميل ملف تفصيلي (CSV)</button>
+}
+else if (!isLoading && (orders == null || orders.Count == 0))
+{
+    <p class="no-results">لا يوجد نتائج لعرضها.</p>
+}
+
+@code {
+    //--------------------------------------------------------
+    // 0) الحقول والدوال الأساسية
+    //--------------------------------------------------------
+    private bool isLoading;
+    private List<OrderModel> orders = new();
+
+    // إحصائيات
+    private int notCancelledCount;
+    private double totalRevenue;
+
+    //--------------------------------------------------------
+    // 1) التواريخ والضبط
+    //--------------------------------------------------------
+    private DateTime _fromDate = DateTime.Now.AddDays(-7);
+    public DateTime FromDate
+    {
+        get => _fromDate;
+        set
+        {
+            if (_fromDate != value)
+            {
+                _fromDate = value;
+                ValidateRange();
+            }
+        }
+    }
+
+    private DateTime _toDate = DateTime.Now;
+    public DateTime ToDate
+    {
+        get => _toDate;
+        set
+        {
+            if (_toDate != value)
+            {
+                _toDate = value;
+                ValidateRange();
+            }
+        }
+    }
+
+    private DateTime minAllowedDate = DateTime.Now.AddMonths(-1);
+    private string minAllowedDateString => minAllowedDate.ToString("yyyy-MM-dd");
+    private string todayString => DateTime.Now.ToString("yyyy-MM-dd");
+
+    private void ValidateRange()
+    {
+        if (FromDate < minAllowedDate)
+            FromDate = minAllowedDate;
+
+        if (ToDate < FromDate)
+            ToDate = FromDate;
+    }
+
+    //--------------------------------------------------------
+    // 2) جلب الطلبات
+    //--------------------------------------------------------
+    private async Task LoadOrders()
+    {
+        isLoading = true;
+        StateHasChanged();
+
+        var result = await _orders.GetPastOrders(FromDate, ToDate);
+        if (result.IsSucceeded && result.Value != null)
+        {
+            orders = result.Value;
+            CalculateStats();
+        }
+        else
+        {
+            orders = new();
+            // يمكنك عرض تنبيه أو رسالة خطأ
+        }
+
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    //--------------------------------------------------------
+    // 3) حساب الإحصائيات
+    //--------------------------------------------------------
+    private void CalculateStats()
+    {
+        notCancelledCount = orders.Count(o => !o.IsCansled);
+        totalRevenue = orders.Where(o => !o.IsCansled).Sum(o => o.TotalPrice);
+    }
+
+    //--------------------------------------------------------
+    // 4) تنزيل ملف CSV
+    //--------------------------------------------------------
+    private async Task DownloadOrdersAsCsv()
+    {
+        var csvBuilder = new StringBuilder();
+
+        // العناوين
+        csvBuilder.AppendLine("OrderID,UserName,Phone,IsCanceled,Date,FromTime,ToTime,TotalPrice,Services");
+
+        foreach (var order in orders)
+        {
+            var username = order.User?.Name ?? "";
+            var phone = order.User?.PhoneNumber ?? "";
+            var isCanceled = order.IsCansled ? "Yes" : "No";
+
+            // مثال: جمع أسماء الخدمات
+            var services = string.Join(" | ",
+                order.OrderServices?.Select(s => s.Service?.Title ?? "")
+                ?? new List<string>());
+
+            csvBuilder.AppendLine(
+                $"{order.Id}," +
+                $"{EscapeCsv(username)}," +
+                $"{EscapeCsv(phone)}," +
+                $"{isCanceled}," +
+                $"{order.Date:yyyy-MM-dd}," +
+                $"{order.FromTime:HH:mm}," +
+                $"{order.ToTime:HH:mm}," +
+                $"{order.TotalPrice}," +
+                $"{EscapeCsv(services)}"
+            );
+        }
+
+        var csvContent = csvBuilder.ToString();
+        var fileName = $"Orders_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+
+        var filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
+
+        // 2. كتابة المحتوى في الملف
+        await File.WriteAllTextAsync(filePath, csvContent);
+
+        // 3. فتح الملف مباشرة بعد حفظه
+        await Launcher.OpenAsync(new OpenFileRequest
+            {
+                File = new ReadOnlyFile(filePath)
+            });
+    }
+
+    private string EscapeCsv(string value)
+    {
+        if (value.Contains(",") || value.Contains("\"") || value.Contains("\n"))
+        {
+            value = value.Replace("\"", "\"\"");
+            return $"\"{value}\"";
+        }
+        return value;
+    }
+}
+
+<style>
+    /*
+       ============== الأساسيات ==============
+       - استخدام خط بسيط يناسب الهواتف
+       - خلفية فاتحة، نص داكن
+       - لمسات فراغ حول المحتوى
+       - انميشن بسيط للظهور
+    */
+
+    /* خط أساسي مقترح */
+    body, input, button, h3, p, div {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* تنسيق العنوان */
+    .page-title {
+        text-align: center;
+        margin: 1rem 0;
+        font-size: 1.2rem;
+        color: #333;
+    }
+
+    /* حاوية اختيار التاريخ والأزرار */
+    .date-range-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+        .date-range-container label {
+            font-weight: 600;
+            margin-right: 0.3rem;
+        }
+
+        /* حقول التاريخ */
+        .date-range-container input[type="date"] {
+            padding: 0.3rem;
+            font-size: 0.9rem;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            min-width: 140px;
+        }
+
+    /* زر عرض الطلبات */
+    .action-button {
+        background-color: #2196f3;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        padding: 0.45rem 1rem;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+        .action-button:hover {
+            background-color: #1976d2;
+        }
+
+    /* مؤشر التحميل */
+    .loading-indicator {
+        text-align: center;
+        font-weight: bold;
+        margin: 1rem 0;
+    }
+
+    /* الحاوية الخاصة بالإحصائيات */
+    .stats-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        margin-bottom: 1rem;
+        align-items: center;
+        background-color: #fafafa;
+        padding: 0.8rem;
+        border-radius: 6px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+
+    .stat-item {
+        display: flex;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .stat-label {
+        font-weight: 600;
+    }
+
+    /* قائمة الطلبات */
+    .orders-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    /* بطاقة الطلب */
+    .order-card {
+        background: #fff;
+        border-radius: 6px;
+        padding: 0.8rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        font-size: 0.9rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+        border-left: 4px solid #4caf50; /* شريط جانبي بسيط */
+    }
+
+        /* لو كان الطلب ملغي */
+        .order-card.canceled {
+            opacity: 0.7;
+            border-left: 4px solid #f44336;
+        }
+
+    /* زر تحميل الملف CSV */
+    .download-button {
+        background-color: #4caf50;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        cursor: pointer;
+        margin-bottom: 2rem;
+    }
+
+        .download-button:hover {
+            background-color: #388e3c;
+        }
+
+    /* نص عدم وجود نتائج */
+    .no-results {
+        text-align: center;
+        color: #666;
+        font-style: italic;
+    }
+
+    /*
+       ============== الحركات (انميشن) ==============
+    */
+
+    /* تأثير Fade-In بسيط */
+    .fade-in {
+        animation: fadeIn 0.6s ease forwards;
+        opacity: 0;
+    }
+    @@keyframes fadeIn {
+        0%
+
+    {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+
+    }
+
+    /* تأثير Fade-In من الأسفل (translateY) */
+    .fade-in-up {
+        animation: fadeInUp 0.6s ease forwards;
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    @@keyframes fadeInUp {
+        0%
+
+    {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    }
+
+    /* استجابة للشاشات الأصغر */
+    @@media (max-width: 600px) {
+        .date-range-container
+
+    {
+        flex-direction: column;
+    }
+
+    .date-range-container input[type="date"] {
+        min-width: auto;
+    }
+
+    .order-card {
+        font-size: 0.85rem;
+    }
+
+    }
+</style>

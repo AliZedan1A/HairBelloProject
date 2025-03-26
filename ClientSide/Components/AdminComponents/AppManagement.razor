@@ -1,0 +1,421 @@
+﻿@page "/appmanagement"
+@using ClientSide.Services.Class
+@using ClientSide.Services.InterFace
+@using Domain.DataTransfareObject
+@using Domain.DatabaseModels
+@inject PhoneNumberService _phonNumberS
+@inject IUserService UserService
+@inject IBarberService _BarberService
+
+<PageTitle>إدارة التطبيق</PageTitle>
+
+<div class="app-management">
+    <!-- قسم إدارة المستخدم -->
+    <div class="card user-management">
+        <h2><i class="fa fa-user"></i> إدارة المستخدم</h2>
+        <div class="input-group">
+            <input type="text" placeholder="ادخل رقم الهاتف" @bind="searchPhoneNumber" />
+            <button class="search-btn" @onclick="SearchUser">
+                <i class="fa fa-search"></i>
+            </button>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <p class="error">@errorMessage</p>
+        }
+
+        @if (user != null)
+        {
+            <div class="user-card">
+                <div class="user-info">
+                    <p><i class="fa fa-phone"></i><span>@user.PhoneNumber</span></p>
+                    <p><i class="fa fa-id-badge"></i><span>@user.Name</span></p>
+                    <p><i class="fa fa-key"></i><span>@user.Code</span></p>
+                    <p>
+                        <i class="fa @(user.IsBanned ? "fa-ban" : "fa-check")"></i>
+                        <span>الحالة: @(user.IsBanned ? "محظور" : "فعال")</span>
+                    </p>
+                </div>
+                <button class="action-btn toggle-ban-btn" @onclick="ToggleBan">
+                    @(user.IsBanned ? "إلغاء الحظر" : "حظر المستخدم")
+                </button>
+            </div>
+        }
+    </div>
+
+    <!-- قسم إدارة استراحة الحلاق -->
+    <div class="card barber-break-management">
+        <h2><i class="fa fa-cut"></i> إدارة استراحة الحلاق</h2>
+        <div class="input-group">
+            <select @bind="selectedBarberId">
+                <option value="0">اختر الحلاق</option>
+                @foreach (var barber in barberList)
+                {
+                    <option value="@barber.Id">@barber.Name</option>
+                }
+            </select>
+        </div>
+
+        @if (selectedBarberId != 0)
+        {
+            var selectedBarber = barberList.FirstOrDefault(b => b.Id == selectedBarberId);
+            if (selectedBarber != null)
+            {
+                if (selectedBarber.IsInBreak)
+                {
+                    <!-- عرض تفاصيل الاستراحة الحالية للحلاق -->
+                    <div class="break-details">
+                        <p>الحلاق <strong>@selectedBarber.Name</strong> في استراحة</p>
+                        <p>من: <strong>@selectedBarber.StartBreak.ToString("dd/MM/yyyy HH:mm")</strong></p>
+                        <p>إلى: <strong>@selectedBarber.EndBreak.ToString("dd/MM/yyyy HH:mm")</strong></p>
+                        <button class="action-btn" @onclick="RemoveBreak">إيقاف الاستراحة</button>
+                    </div>
+                }
+                else
+                {
+                    <!-- إذا لم يكن في استراحة، عرض حقول الإدخال لتعيين الاستراحة -->
+                    <div class="input-group">
+                        <label>من:</label>
+                        <input type="datetime-local" @bind="startBreak" class="input-box" />
+                    </div>
+                    <div class="input-group">
+                        <label>إلى:</label>
+                        <input type="datetime-local" @bind="endBreak" class="input-box" />
+                    </div>
+                    <button class="action-btn" @onclick="SetBreak">تعيين الاستراحة</button>
+                }
+            }
+        }
+
+        @if (!string.IsNullOrEmpty(breakMessage))
+        {
+            <p class="info-message">@breakMessage</p>
+        }
+    </div>
+</div>
+
+@code {
+    // قسم إدارة المستخدم
+    private string searchPhoneNumber;
+    private UserModel user;
+    private string errorMessage;
+
+    // قسم إدارة استراحة الحلاق
+    private List<BarberModel> barberList = new List<BarberModel>();
+    private int selectedBarberId = 0;
+
+    // الخاصيتان الأساسيّتان لتخزين قيم التاريخ/الوقت (DateTime?)
+    private DateTime? startBreak;
+    private DateTime? endBreak;
+
+    // الخاصيتان الوسيطتان من نوع string لربط عناصر datetime-local
+
+    private string breakMessage = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        // جلب إعدادات التطبيق إذا دعت الحاجة
+        var configResult = await UserService.GetConfig();
+        if (!configResult.IsSucceeded)
+        {
+            errorMessage = configResult.Comment;
+        }
+        // جلب قائمة الحلاقين المتاحين
+        var barberResult = await _BarberService.GetBarberListAsync();
+        if (barberResult.IsSucceeded)
+        {
+            barberList = barberResult.Value;
+        }
+        else
+        {
+            errorMessage = barberResult.Comment;
+        }
+    }
+
+    private async Task SearchUser()
+    {
+        errorMessage = string.Empty;
+        var result = await UserService.GetUserByPhonNumber(searchPhoneNumber);
+        if (result.IsSucceeded)
+        {
+            user = result.Value;
+        }
+        else
+        {
+            errorMessage = result.Comment;
+            user = null;
+        }
+    }
+
+    private async Task ToggleBan()
+    {
+        if (user == null)
+            return;
+
+        var dto = new ToogleBanDto
+            {
+                LocalPhonNumber = _phonNumberS.GetPhoneNumber(),
+                BanPhonNumber = user.PhoneNumber
+            };
+
+        var result = await UserService.ToogleBan(dto);
+        if (result.IsSucceeded)
+        {
+            user.IsBanned = !user.IsBanned;
+        }
+        else
+        {
+            errorMessage = result.Comment;
+        }
+    }
+
+    // دالة تعيين استراحة الحلاق
+    private async Task SetBreak()
+    {
+        breakMessage = "";
+        if (selectedBarberId == 0)
+        {
+            breakMessage = "يرجى اختيار الحلاق.";
+            return;
+        }
+        if (!startBreak.HasValue || !endBreak.HasValue)
+        {
+            breakMessage = "يرجى تحديد وقت البداية والنهاية للاستراحة.";
+            return;
+        }
+        if (startBreak.Value >= endBreak.Value)
+        {
+            breakMessage = "يجب أن يكون وقت البداية قبل وقت النهاية.";
+            return;
+        }
+
+        var req = new CreateBarberBreak
+            {
+                BarberId = selectedBarberId,
+                StartBreak = startBreak.Value,
+                EndBreak = endBreak.Value
+            };
+
+        var result = await _BarberService.SetBarberBreak(req);
+        if (result.IsSucceeded)
+        {
+            breakMessage = "تم تعيين الاستراحة بنجاح.";
+            // تحديث الحالة في القائمة (إذا كانت الخدمة تُرجع بيانات محدثة يمكنك تحديث selectedBarber.IsInBreak)
+            var barber = barberList.FirstOrDefault(b => b.Id == selectedBarberId);
+            if (barber != null)
+            {
+                barber.IsInBreak = true;
+                barber.StartBreak = startBreak.Value;
+                barber.EndBreak = endBreak.Value;
+            }
+        }
+        else
+        {
+            breakMessage = result.Comment;
+        }
+    }
+
+    private async Task RemoveBreak()
+    {
+        breakMessage = "";
+        if (selectedBarberId == 0)
+        {
+            breakMessage = "يرجى اختيار الحلاق.";
+            return;
+        }
+        var req = new RemoveBarberBreak
+            {
+                BarberId = selectedBarberId
+            };
+        var result = await _BarberService.RemoveBarberBreak(req);
+        if (result.IsSucceeded)
+        {
+            breakMessage = "تم إيقاف الاستراحة بنجاح.";
+            // تحديث الحالة في القائمة
+            var barber = barberList.FirstOrDefault(b => b.Id == selectedBarberId);
+            if (barber != null)
+            {
+                barber.IsInBreak = false;
+            }
+        }
+        else
+        {
+            breakMessage = result.Comment;
+        }
+    }
+}
+
+<style>
+    /* إعدادات عامة للتطبيق */
+    .app-management {
+        padding: 1rem;
+        background-color: #f0f2f5;
+        min-height: 100vh;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* بطاقات المحتوى */
+    .card {
+        background-color: #ffffff;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        animation: fadeIn 0.5s ease forwards;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+        text-align: center;
+        margin-bottom: 1rem;
+        color: #333;
+    }
+
+    /* مجموعة الإدخال */
+    .input-group {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        justify-content: center;
+    }
+
+        .input-group input[type="text"],
+        .input-group select,
+        .input-group input[type="datetime-local"] {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .input-group label {
+            margin-right: 0.5rem;
+            font-size: 1rem;
+            color: #333;
+        }
+
+    .search-btn {
+        padding: 0.75rem 1rem;
+        border: none;
+        background: #4caf50;
+        color: #fff;
+        border-radius: 0 8px 8px 0;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+
+        .search-btn:hover {
+            background: #45a049;
+        }
+
+    .user-card, .config-card {
+        border-top: 1px solid #e0e0e0;
+        padding-top: 1rem;
+        animation: slideIn 0.5s ease forwards;
+    }
+
+        .user-info p, .config-card p {
+            margin: 0.5rem 0;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            color: #555;
+        }
+
+            .user-info p i, .config-card p i {
+                margin-right: 0.5rem;
+                font-size: 1.2rem;
+            }
+
+    .action-btn {
+        display: inline-block;
+        width: 45%;
+        padding: 0.75rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        color: #fff;
+        cursor: pointer;
+        margin: 0.5rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        text-align: center;
+    }
+
+        .action-btn:active {
+            transform: scale(0.98);
+        }
+
+    /* أزرار قسم إدارة المستخدم */
+    .toggle-ban-btn {
+        background: linear-gradient(45deg, #ff4d4d, #ff6666);
+        width: 100%;
+    }
+
+    /* أزرار قسم استراحة الحلاق */
+    .barber-break-management .action-btn:first-child {
+        background-color: #0078D7;
+    }
+
+    .barber-break-management .action-btn:last-child {
+        background-color: #d32f2f;
+    }
+
+    .break-details {
+        text-align: center;
+        margin: 1rem 0;
+        background-color: #eef7ff;
+        padding: 0.75rem;
+        border: 1px solid #b3d4fc;
+        border-radius: 8px;
+    }
+
+    .info-message {
+        margin-top: 1rem;
+        padding: 0.8rem;
+        background-color: #e7f3fe;
+        color: #31708f;
+        border: 1px solid #bce8f1;
+        border-radius: 4px;
+        font-size: 1rem;
+        text-align: center;
+    }
+
+    .error {
+        color: #d32f2f;
+        text-align: center;
+        margin-top: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    @@keyframes fadeIn {
+        from
+
+    {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    }
+
+    @@keyframes slideIn {
+        from
+
+    {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    }
+</style>

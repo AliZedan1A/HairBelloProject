@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>ClientSide</title>
+    <base href="/" />
+
+    <!-- ملفات CSS الأساسية -->
+    <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="css/app.css" />
+    <link rel="stylesheet" href="css/HomePage.css" />
+    <link rel="stylesheet" href="css/nav.css" />
+    <link rel="stylesheet" href="css/ScheduleView.css" />
+    <link rel="stylesheet" href="css/Alert.css" />
+    <link rel="stylesheet" href="css/Admin.css" />
+    <link rel="stylesheet" href="css/CssComponents/BarbersMangment.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="ClientSide.styles.css" />
+    <link rel="icon" href="data:,">
+    <script src="js/mob.js"></script>
+
+    <!-- أنماط شاشة التحميل -->
+    <style>
+        /* تغطية الشاشة الكاملة لشاشة التحميل */
+        .loading-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000; /* خلفية سوداء */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            z-index: 9999;
+        }
+            /* تنسيق اللوجو مع تأثير ظهور تدريجي */
+            .loading-container .logo {
+                width: 120px;
+                height: 120px; /* لضمان الحصول على دائرة متناسقة */
+                border-radius: 50%; /* جعل الصورة دائرية */
+                object-fit: cover; /* لضمان احتواء الصورة داخل الدائرة بشكل جميل */
+                animation: fadeInLogo 1.5s ease-in-out forwards;
+                opacity: 0;
+                border: 3px solid #fff; /* إطار أبيض لتحسين وضوح الصورة */
+            }
+
+        @keyframes fadeInLogo {
+            0% {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        /* تصميم سبينر دوار */
+        .loading-container .spinner {
+            margin-top: 20px;
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-top: 5px solid #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        /* نص التحميل مع تأثير انتقال خفيف */
+        .loading-container .loading-text {
+            margin-top: 20px;
+            font-size: 1.5rem;
+            color: #fff;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            animation: fadeInText 2s ease-in-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes fadeInText {
+            0% {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="status-bar-safe-area"></div>
+
+    <!-- شاشة التحميل -->
+    <div class="loading-container" id="loadingScreen">
+        <img src="Image/logo.jpg" alt="Logo" class="logo" />
+        <div class="spinner"></div>
+        <div class="loading-text">...جار التحميل</div>
+    </div>
+    <!-- المحتوى الرئيسي للتطبيق (يُعرض بعد انتهاء التحميل) -->
+    <div id="app" style="display: none;">Loading...</div>
+
+    <script src="_framework/blazor.webview.js" autostart="false"></script>
+    <script>
+        // بمجرد تحميل المحتوى الرئيسي، نخفي شاشة التحميل ونظهر التطبيق
+        document.addEventListener("DOMContentLoaded", function () {
+            // يمكنك تعديل التأخير بناءً على جاهزية التطبيق الفعلية
+            setTimeout(function () {
+                var loadingScreen = document.getElementById('loadingScreen');
+                var app = document.getElementById('app');
+                loadingScreen.style.opacity = 0;
+                loadingScreen.style.transition = "opacity 0.5s ease-out";
+                setTimeout(function () {
+                    loadingScreen.style.display = 'none';
+                    app.style.display = 'block';
+                }, 500);
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
