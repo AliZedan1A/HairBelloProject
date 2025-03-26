@@ -15,11 +15,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-        options.UseMySql("server=localhost;port=3306;database=hairbellodb;user=alized;password=Alized@12300!;", new MySqlServerVersion(new Version(8, 0, 32)),
+        options.UseMySql("!;", new MySqlServerVersion(new Version(8, 0, 32)),
         mySqlOptions => mySqlOptions.EnableRetryOnFailure()
     ));
 builder.Services.AddSwaggerGen();
-//    options.UseMySql("server=localhost;port=3306;database=hairbellodb;user=alized;password=Alized@12300!;",
 
 //repositories
 builder.Services.AddScoped<BarberRepository>();
