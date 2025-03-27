@@ -536,3 +536,147 @@ body {
         transform: translateY(0);
     }
 }
+/* ---------------------------
+   تحسينات الشاشات الكبيرة 
+------------------------------*/
+
+/* تحسين الحاوية العامة */
+.container {
+    max-width: 1200px; /* زيادة العرض الأقصى */
+    padding: 0 2rem; /* زيادة الهوامش الجانبية */
+}
+
+/* معرض الصور - تحسين للشاشات الكبيرة */
+@media (min-width: 768px) {
+    .hero-gallery {
+        height: 60vh; /* زيادة الارتفاع للتابلت */
+        border-radius: 30px; /* زوايا أكثر نعومة */
+        margin: 2rem auto; /* مركزة مع هوامش */
+        width: 95%; /* عدم امتداد كامل الشاشة */
+    }
+
+    .hero-gallery-overlay {
+        padding: 2.5rem 3rem; /* مساحة أكبر للنص */
+    }
+
+    .hero-book-btn {
+        font-size: 1.2rem; /* حجم نص أكبر */
+        padding: 1rem 3rem; /* زر أوسع */
+    }
+}
+
+@media (min-width: 1024px) {
+    .hero-gallery {
+        height: 70vh; /* ارتفاع أكبر للشاشات الكبيرة */
+        max-width: 1400px; /* حدود قصوى للمعرض */
+    }
+}
+
+/* تحسينات بطاقات الحلاقين */
+@media (min-width: 768px) {
+    .barbers-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 2rem; /* مسافة أكبر بين البطاقات */
+    }
+
+    .barber-card {
+        transition: transform 0.3s ease; /* إضافة تأثير حركي */
+    }
+
+        .barber-card:hover {
+            transform: translateY(-5px); /* رفع البطاقة عند المرور */
+        }
+
+    .service-block {
+        padding: 1.2rem; /* مساحة داخلية أكبر */
+        margin: 1rem 0; /* هوامش أكبر */
+    }
+
+    .service-info h4 {
+        font-size: 1.1rem; /* حجم نص أكبر */
+    }
+
+    .elegant-book-btn {
+        font-size: 1.1rem; /* حجم نص أكبر للزر */
+        padding: 1.5rem; /* مساحة داخلية أكبر */
+    }
+}
+
+@media (min-width: 1024px) {
+    .barbers-grid {
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    }
+
+    .profile-header {
+        padding: 2rem; /* مساحة أكبر للهيدر */
+        justify-content: flex-start; /* محاذاة لليسار */
+    }
+
+    .avatar-frame {
+        width: 120px; /* حجم أكبر للصورة */
+        height: 120px;
+    }
+
+    .profile-meta h2 {
+        font-size: 1.8rem; /* عنوان أكبر */
+    }
+
+    .section-heading {
+        font-size: 2.5rem; /* حجم عنوان أكبر */
+        margin-bottom: 3rem; /* مسافة أسفل أكبر */
+    }
+}
+
+/* تحسينات التنبيهات والعداد */
+@media (min-width: 768px) {
+    .order-reminder-collapsible {
+        margin: 2rem auto; /* مركزة مع هوامش */
+        max-width: 800px; /* حدود قصوى للعرض */
+    }
+
+    .reminder-title {
+        font-size: 1.3rem; /* حجم نص أكبر */
+    }
+
+    .reminder-row {
+        font-size: 1.1rem; /* حجم نص أكبر */
+    }
+
+    .countdown-row {
+        padding: 1rem; /* مساحة داخلية أكبر */
+    }
+}
+
+/* تحسينات عامة للشاشات العريضة */
+@media (min-width: 1200px) {
+    body {
+        font-size: 18px; /* زيادة حجم الخط العام */
+    }
+
+    .service-meta {
+        font-size: 1rem; /* حجم نص أكبر للتفاصيل */
+    }
+
+    .selected-info {
+        font-size: 1.2rem; /* حجم نص أكبر للمعلومات */
+    }
+}
+
+/* تحسينات خاصة للاتجاه الأفقي في الأجهزة اللوحية */
+@media (min-width: 768px) and (orientation: landscape) {
+    .hero-gallery {
+        height: 80vh; /* استخدام ارتفاع أكبر في الوضع الأفقي */
+    }
+
+    .barbers-grid {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    }
+}
+
+/* تحسينات الرسوم المتحركة */
+@media (prefers-reduced-motion: no-preference) {
+    .gallery-track {
+        animation: scroll 40s linear infinite; /* إبطاء السرعة للشاشات الكبيرة */
+    }
+}

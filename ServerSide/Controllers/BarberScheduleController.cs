@@ -35,7 +35,7 @@ namespace ServerSide.Controllers
             var model  = await barberrepo.GetAsync(BarberId);
             if (model.IsSucceeded)
             {
-                if(model.Value.EndBreak < dateTimeService.IsraelNow())
+                if(model.Value.EndBreak < dateTimeService.IsraelNow() )
                 {
                     model.Value.IsInBreak = false;
                     var res = await barberrepo.UpdateAsync(model.Value);
@@ -50,7 +50,7 @@ namespace ServerSide.Controllers
                     }
 
                 }
-                if (model.Value.IsInBreak)
+                if (model.Value.IsInBreak && model.Value.StartBreak < dateTimeService.IsraelNow())
                 {
                     return BadRequest(new ServiceReturnModel<List<AvailableSlotModel>>() {
                     Comment = "هذا الحلاق  في استراحة  لا يمكنك حجز عنده",

@@ -55,8 +55,27 @@ namespace ServerSide.Controllers
             var result = await _repository.GetOrderPhonnumber(PhonNumber);
             return result.IsSucceeded ? Ok(result) : NotFound(result);
         }
+        [HttpPut("AdminCancelOrder")]
+        public async Task<IActionResult> AdminCancelOrder([FromBody] AdminCansleOrderDto order)
+        {
+
+            var model = await _repository.GetAsync(order.OrderId);
+            if (model.IsSucceeded)
+            {
+
+
+                model.Value.IsCansled = true;
+                var retedit = await _repository.UpdateAsync(model.Value);
+                return retedit.IsSucceeded ? Ok(retedit) : BadRequest(retedit);
+
+            }
+            else
+            {
+                return BadRequest(model);
+            }
+        }
         [HttpPut("CancelOrder")]
-        public async Task<IActionResult> CancelOrder([FromBody]int OrderId)
+        public async Task<IActionResult> CancelOrder([FromBody] int OrderId)
         {
             
             var model = await _repository.GetAsync(OrderId);

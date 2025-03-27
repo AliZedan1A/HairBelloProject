@@ -12,6 +12,8 @@ namespace ClientSide.Services.InterFace
         public Task<ServiceReturnModel<bool>> DeleteOrder(int id);
         public Task<ServiceReturnModel<OrderModel>> GetLastOrder(string PhonNumber);
         public Task<ServiceReturnModel<bool>> CanselOrder(int OrderId);
+        public Task<ServiceReturnModel<bool>> AdminCanselOrder(AdminCansleOrderDto req);
+
         public Task<ServiceReturnModel<List<OrderModel>>> GetPastOrders(DateTime from, DateTime to);
     }
 }
