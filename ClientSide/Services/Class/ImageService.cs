@@ -2,12 +2,14 @@
 using Domain.DatabaseModels;
 using Domain.DataTransfareObject;
 using Domain.Models;
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 
 namespace ClientSide.Services.Class
 {
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)]
     public class ImageService : IImageService
     {
         private async Task<ServiceReturnModel<T>> HandleResponse<T>(HttpResponseMessage response)
@@ -31,16 +33,8 @@ namespace ClientSide.Services.Class
         }
         public async Task<ServiceReturnModel<bool>> AddImage(CreatePreviewImageDto req)
         {
-            var options = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                WriteIndented = true
-            };
-
-
-            string jsonData = JsonSerializer.Serialize(req.File, options);
+       
             var client = _httpclient.CreateClient("Server");
-            var jsonContent = new StringContent(jsonData, Encoding.UTF8, "application/json");
             var response = await client.PostAsync("PreviewImage", req.File);
             return await HandleResponse<bool>(response);
         }

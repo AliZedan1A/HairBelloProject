@@ -56,7 +56,7 @@ namespace ServerSide.Services
                     var user = await _userRepository.GetAsync(item.UserId);
                     if(user.IsSucceeded)
                     {
-                        if (item.Date.Date == _dateService.IsraelNow().Date)
+                        if (item.Date.Date == _dateService.IsraelNow().Date && !item.IsCansled)
                         {
                             var fromTimeOnly = item.FromTime.TimeOfDay;
                             var israelTimeOnly = _dateService.IsraelNow().TimeOfDay;
@@ -65,9 +65,11 @@ namespace ServerSide.Services
                             var trimmedIsraelTime = new TimeSpan(_dateService.IsraelNow().Hour, _dateService.IsraelNow().Minute, 0);
 
                             var timeDifference = (trimmedFromTime - trimmedIsraelTime).Duration();
-                            
-                            if (timeDifference.TotalMinutes == 30)
+                            var realDifference = (trimmedFromTime - trimmedIsraelTime);
+
+                            if (timeDifference.TotalMinutes == 30&& realDifference > TimeSpan.Zero)
                             {
+                                
                                 try
                                 {
                                     string message = @$"

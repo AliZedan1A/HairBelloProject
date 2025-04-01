@@ -25,7 +25,7 @@
         <ApplicationTitle>HairBello</ApplicationTitle>
 
         <!-- App Identifier -->
-        <ApplicationId>com.companyname.HairBello</ApplicationId>
+        <ApplicationId>com.hairbello.site</ApplicationId>
 
         <!-- Versions -->
         <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
@@ -41,14 +41,29 @@
         <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
     </PropertyGroup>
-
     <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-android|AnyCPU'">
       <AndroidPackageFormat>apk</AndroidPackageFormat>
+		<BlazorWebAssemblyEnableLinking>true</BlazorWebAssemblyEnableLinking>
+		<PublishTrimmed>true</PublishTrimmed>
+		<RunAOTCompilation>true</RunAOTCompilation>		
+	</PropertyGroup>
+	<ItemGroup>
+		<TrimmerRootDescriptor Include="LinkerConfig.xml" />
+	</ItemGroup>
+  <PropertyGroup Condition="$(TargetFramework.Contains('-ios')) and '$(Configuration)' == 'Release'">
+       <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
+	    <MauiIOSAppManifest>Platforms/iOS/Info.plist</MauiIOSAppManifest>
+	    <PublishTrimmed>true</PublishTrimmed>
+	    <TrimMode>copyused</TrimMode>
+	    <EnableTrimAnalyzer>false</EnableTrimAnalyzer>
+	  <RuntimeIdentifier>ios-arm64</RuntimeIdentifier>
+        <CodesignKey>Apple Distribution: Rashed Asaad (R832A7366Q)</CodesignKey>
+        <CodesignProvision>hairbello</CodesignProvision>
     </PropertyGroup>
 
-    <ItemGroup>
+	<ItemGroup>
         <!-- App Icon -->
-        <MauiIcon Include="Resources\AppIcon\appicon.jpg" BaseSize="128,128" />
+        <MauiIcon Include="Resources\AppIcon\appicon.png" BaseSize="1024,1024" />
 
         <!-- Splash Screen -->
 		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#d3d9e3" BaseSize="128,128" />
@@ -65,6 +80,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="9.0.3" />
         <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="9.0.2" />
         <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
         <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="$(MauiVersion)" />

@@ -219,16 +219,28 @@ namespace ServerSide.Repositories.Class
                 };
             }
         }
-        public async Task<bool> IsOrderTimeAvailble(int barberId,DateTime fromtime,DateTime endtime ,DateTime date )
+        public async Task<bool> OrderTime(int barberId, DateTime fromtime, DateTime endtime, DateTime date)
         {
             return await _context.Orders
         .AnyAsync(o =>
             o.BarberId == barberId &&
-            o.Date == date.Date &&
+            o.Date.Date == date.Date &&
             o.IsCansled == false &&
-            fromtime < o.ToTime &&
-            endtime > o.FromTime
+            fromtime.TimeOfDay == o.FromTime.TimeOfDay &&
+            endtime.TimeOfDay == o.ToTime.TimeOfDay
         );
+        }
+        public async Task<bool> IsOrderTimeAvailble(int barberId,DateTime fromtime,DateTime endtime ,DateTime date )
+        {
+
+                return await _context.Orders
+            .AnyAsync(o =>
+                o.BarberId == barberId &&
+                o.Date.Date == date.Date &&
+                o.IsCansled == false &&
+                fromtime.TimeOfDay < o.ToTime.TimeOfDay &&
+                endtime.TimeOfDay > o.FromTime.TimeOfDay
+            );
         }
 
     }

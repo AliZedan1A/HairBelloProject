@@ -101,5 +101,20 @@ namespace ClientSide.Services.Class
             var response = await client.PutAsync("Orders/CancelOrder", jsonContent);
             return await HandleResponse<bool>(response);
         }
+
+        public async Task<ServiceReturnModel<bool>> AdminCanselOrder(AdminCansleOrderDto req)
+        {
+            var options = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = true
+            };
+
+            string jsonData = JsonSerializer.Serialize(req, options);
+            var client = _httpclient.CreateClient("Server");
+            var jsonContent = new StringContent(jsonData, Encoding.UTF8, "application/json");
+            var response = await client.PutAsync("Orders/AdminCancelOrder", jsonContent);
+            return await HandleResponse<bool>(response);
+        }
     }
 }

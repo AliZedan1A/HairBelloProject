@@ -1,0 +1,226 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HairBello</title>
+    <style>
+        @@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+
+        :root {
+            --main-color: #fff;
+            --secondary-color: #ccc;
+            --accent-color: #34a853;
+            --ios-color: #007aff;
+            --bg-color: #000;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+            color: var(--main-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        @@keyframes fadeInUp {
+            from
+
+        {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        }
+
+        @@keyframes falling {
+            0%
+
+        {
+            transform: translateY(-100px) rotate(0deg);
+            opacity: 1;
+        }
+
+        100% {
+            transform: translateY(100vh) rotate(360deg);
+            opacity: 0;
+        }
+
+        }
+
+        .falling-element {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: falling 6s linear infinite;
+        }
+
+        .card {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 100%;
+            backdrop-filter: blur(5px);
+            animation: fadeInUp 1s ease-out;
+        }
+
+        img.icon {
+            width: 120px;
+            height: 120px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            color: var(--secondary-color);
+        }
+
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.3s, transform 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .btn i {
+                margin-left: 10px;
+                font-size: 1.4rem;
+            }
+
+            .btn.android {
+                background-color: var(--accent-color);
+                color: white;
+            }
+
+                .btn.android:hover {
+                    background-color: #2b8d45;
+                    transform: scale(1.05);
+                }
+
+            .btn.ios {
+                background-color: var(--ios-color);
+                color: white;
+            }
+
+                .btn.ios:hover {
+                    background-color: #005fcc;
+                    transform: scale(1.05);
+                }
+
+        .social-links {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+            .social-links a {
+                color: white;
+                font-size: 2.5rem;
+                text-decoration: none;
+                transition: transform 0.3s, color 0.3s;
+            }
+
+                .social-links a:hover {
+                    transform: scale(1.3);
+                    color: #ccc;
+                }
+
+        @@media (max-width: 600px) {
+            body
+
+        {
+            padding-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2rem;
+        }
+
+        p {
+            font-size: 1rem;
+        }
+
+        .btn {
+            font-size: 1rem;
+            padding: 12px;
+        }
+
+        .social-links {
+            gap: 20px;
+        }
+
+            .social-links a {
+                font-size: 2.2rem;
+            }
+
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="falling-element" style="left:10%; animation-delay: 0s;"></div>
+    <div class="falling-element" style="left:30%; animation-delay: 1s;"></div>
+    <div class="falling-element" style="left:50%; animation-delay: 2s;"></div>
+    <div class="falling-element" style="left:70%; animation-delay: 3s;"></div>
+    <div class="falling-element" style="left:90%; animation-delay: 4s;"></div>
+
+    <div class="card">
+        <img src="/Uploads/appicon.png" alt="HairBello Icon" class="icon">
+        <h1>أهلاً بك في تطبيق HairBello</h1>
+        <p>حلاقة وخيارات إضافية تبدأ من هنا، احجز موعدك وحمّل التطبيق الآن!</p>
+
+        <div class="buttons">
+            <a href="/Uploads/com.hairbello.site.apk" class="btn android"><i class="fab fa-android"></i> تحميل للأندرويد</a>
+            <a href="#" class="btn ios"><i class="fab fa-apple"></i> قريبًا على App Store</a>
+        </div>
+
+        <div class="social-links">
+            <a href="https://wa.me/972504466866" target="_blank" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+            <a href="https://www.instagram.com/barber_hair_bello?igsh=MWYzM254ZXV5Nm52dQ==" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="https://ul.waze.com/ul?ll=32.80690002%2C35.26729965&navigate=yes" target="_blank" title="Waze"><i class="fas fa-map-marker-alt"></i></a>
+        </div>
+    </div>
+</body>
+</html>

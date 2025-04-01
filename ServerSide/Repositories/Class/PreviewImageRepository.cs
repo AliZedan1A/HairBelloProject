@@ -200,7 +200,19 @@ namespace ServerSide.Repositories.Class
             // حفظ الملف على السيرفر
             using (var stream = new FileStream(path, FileMode.Create))
             {
-                await file.CopyToAsync(stream);
+                try
+                {
+                    await file.CopyToAsync(stream);
+
+                }
+                catch(Exception ex)
+                {
+                    return new ServiceReturnModel<bool>
+                    {
+                        Comment = "فشل اضافة الصورة.",
+                        IsSucceeded = false
+                    };
+                }
             }
 
             // تحويل المسار ليصبح رابط URL صالح عن طريق استبدال wwwroot بالـ baseUrl

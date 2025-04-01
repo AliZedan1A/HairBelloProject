@@ -133,15 +133,18 @@
     }
 
     @@keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(-10px);
-        }
+        from
 
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
     }
 
     /* معرض الفيديوهات */
@@ -197,6 +200,54 @@
         .arrow:hover {
             background: rgba(0, 0, 0, 0.7);
         }
+
+    /* تحسين الاستجابة لأجهزة التابلت و iPad */
+    @@media (min-width: 768px) {
+        .about-container
+
+    {
+        max-width: 750px;
+        padding: 1.5rem;
+    }
+
+    .shop-info {
+        padding: 1.5rem;
+    }
+
+    .waze-button {
+        padding: 0.8rem 1.2rem;
+        font-size: 1rem;
+    }
+
+    .barber-card {
+        padding: 1rem 1.5rem;
+        font-size: 1rem;
+    }
+
+    .schedule-table th,
+    .schedule-table td {
+        padding: 0.8rem;
+        font-size: 1rem;
+    }
+
+    .video-gallery {
+        max-width: 750px;
+    }
+
+    }
+
+    @@media (min-width: 1024px) {
+        .about-container
+
+    {
+        max-width: 900px;
+    }
+
+    .video-gallery {
+        max-width: 900px;
+    }
+
+    }
 </style>
 
 <div class="about-container">
@@ -218,7 +269,7 @@
             <img src="https://cdn-icons-png.flaticon.com/512/3173/3173672.png" alt="موس" class="icon" />
             <img src="https://cdn-icons-png.flaticon.com/512/3173/3173675.png" alt="مشط" class="icon" />
         </div>
-        <a class="waze-button" href="https://ul.waze.com/ul?ll=32.80903434,35.26773548&navigate=yes&zoom=16" target="_blank">
+        <a class="waze-button" href="https://ul.waze.com/ul?ll=32.80690002%2C35.26729965&navigate=yes&utm_campaign=share_drive&utm_source=waze_app&utm_medium=lm_share_location" target="_blank">
             @Lang["Waze"] Waze
         </a>
     </div>
