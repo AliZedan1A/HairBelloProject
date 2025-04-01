@@ -128,7 +128,7 @@ else
                                 @foreach (var service in barber.Services)
                                 {
                                     <div class="service-block @(IsServiceSelected(barber.Id, service.Id) ? "selected-service" : "")"
-                                         @onclick="() => ToggleService(barber.Id, service.Id)">
+                                    @onclick="() => ToggleService(barber.Id, service.Id)">
                                         <div class="service-info">
                                             <h4>@service.Title</h4>
                                             <div class="service-meta">
@@ -218,8 +218,8 @@ else
         var phon = PhoneService.GetPhoneNumber();
         if (phon is null)
         {
-            NavigationManager.NavigateTo("/PhonAuth");
-            return;
+            // NavigationManager.NavigateTo("/PhonAuth");
+            IsAuth = false;
         }
         else
         {
@@ -231,8 +231,7 @@ else
             }
             else
             {
-                NavigationManager.NavigateTo("/PhonAuth");
-                return;
+                IsAuth = false;
             }
         }
 
@@ -396,6 +395,16 @@ else
     {
         var servicesQuery = string.Join(",", selectedServiceIds);
         var (totalPrice, totalTime) = CalculateTotals();
-        NavigationManager.NavigateTo($"/{selectedBarberId}/ScheduleView/{servicesQuery}/{totalPrice}");
+
+        if(IsAuth)
+        {
+            NavigationManager.NavigateTo($"/{selectedBarberId}/ScheduleView/{servicesQuery}/{totalPrice}");
+        }
+        else
+        {
+            string redirect = $"/{selectedBarberId}/ScheduleView/{servicesQuery}/{totalPrice}";
+            _Alert.ShowAlert(Lang["HomeAlert-CantBocking"],AlertType.Error);
+            NavigationManager.NavigateTo($"/PhonAuth?redirect={Uri.EscapeDataString(redirect)}");
+        }
     }
 }

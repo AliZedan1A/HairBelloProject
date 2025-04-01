@@ -27,11 +27,16 @@
         @* التحقق من رقم الهاتف *@
         @if (IsLoggedIn)
         {
-                    <span class="welcome-text">@_loj["nav-Welcome"]: @phoneNumber</span>
+            <span class="welcome-text">@_loj["nav-Welcome"]: @phoneNumber</span>
             @if (IsAdmin)
             {
-                  <NavLink href="/admin">@_loj["nav-Admin"]</NavLink>
+                <NavLink href="/admin">@_loj["nav-Admin"]</NavLink>
             }
+        }
+        else
+        {
+            <NavLink href="/PhonAuth">@_loj["LoginNav"]</NavLink>
+
         }
 
         @* زر تبديل اللغة *@

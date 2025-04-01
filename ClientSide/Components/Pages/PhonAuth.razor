@@ -12,151 +12,151 @@
 <style>
     html,
     body {
-        margin: 0;
-        padding: 0;
-        height: 100%;
+    margin: 0;
+    padding: 0;
+    height: 100%;
     }
 
     /* الحاوية الأساسية للصفحة */
     .page-container {
-        /* بدلاً من الاعتماد على max-width صغير دائماً، نجعلها 100% افتراضياً */
-        width: 100%;
-        max-width: 600px;
-        /* لضبط التموضع الأفقي في الشاشات الصغيرة */
-        margin: 2rem auto;
-        /* لإظهارها كصندوق في وسط الشاشة عمودياً وأفقياً إن رغبت بذلك */
-        min-height: calc(100vh - 4rem);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        padding: 2rem;
-        background-color: #f9f9f9;
-        border-radius: 8px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        text-align: center;
-        animation: fadeIn 0.8s ease-in-out;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    /* بدلاً من الاعتماد على max-width صغير دائماً، نجعلها 100% افتراضياً */
+    width: 100%;
+    max-width: 600px;
+    /* لضبط التموضع الأفقي في الشاشات الصغيرة */
+    margin: 2rem auto;
+    /* لإظهارها كصندوق في وسط الشاشة عمودياً وأفقياً إن رغبت بذلك */
+    min-height: calc(100vh - 4rem);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    animation: fadeIn 0.8s ease-in-out;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
     h3 {
-        color: #333;
-        margin-bottom: 1rem;
+    color: #333;
+    margin-bottom: 1rem;
     }
 
     /* مدخلات النص */
     .input-box {
-        width: 80%;
-        padding: 0.8rem;
-        font-size: 1.2rem;
-        border: 2px solid #ccc;
-        border-radius: 4px;
-        outline: none;
-        transition: border-color 0.3s ease, box-shadow 0.3s ease;
-        margin-bottom: 1rem;
+    width: 80%;
+    padding: 0.8rem;
+    font-size: 1.2rem;
+    border: 2px solid #ccc;
+    border-radius: 4px;
+    outline: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    margin-bottom: 1rem;
     }
 
-        .input-box:focus {
-            border-color: #0078D7;
-            box-shadow: 0 0 5px rgba(0, 120, 215, 0.5);
-        }
+    .input-box:focus {
+    border-color: #0078D7;
+    box-shadow: 0 0 5px rgba(0, 120, 215, 0.5);
+    }
 
     /* الأزرار */
     .save-button, .change-phone-button {
-        padding: 0.8rem 1.5rem;
-        font-size: 1.1rem;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: background-color 0.3s ease, transform 0.2s ease;
-        margin: 0.5rem;
-        background-color: #28a745;
-        color: #fff;
+    padding: 0.8rem 1.5rem;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    margin: 0.5rem;
+    background-color: #28a745;
+    color: #fff;
     }
 
-        .save-button:hover, .change-phone-button:hover {
-            background-color: #218838;
-            transform: scale(1.05);
-        }
+    .save-button:hover, .change-phone-button:hover {
+    background-color: #218838;
+    transform: scale(1.05);
+    }
 
     /* الرسالة */
     .info-message {
-        margin-top: 1rem;
-        padding: 0.8rem;
-        background-color: #e7f3fe;
-        color: #31708f;
-        border: 1px solid #bce8f1;
-        border-radius: 4px;
-        font-size: 1rem;
+    margin-top: 1rem;
+    padding: 0.8rem;
+    background-color: #e7f3fe;
+    color: #31708f;
+    border: 1px solid #bce8f1;
+    border-radius: 4px;
+    font-size: 1rem;
     }
 
     /* الحركة */
     @@keyframes fadeIn {
-        from
+    from
 
     {
-        opacity: 0;
-        transform: translateY(-10px);
+    opacity: 0;
+    transform: translateY(-10px);
     }
 
     to {
-        opacity: 1;
-        transform: translateY(0);
+    opacity: 1;
+    transform: translateY(0);
     }
 
     }
 
     /* تحسين الاستجابة لأجهزة التابلت (768px فأعلى) */
     @@media (min-width: 768px) {
-        .page-container
+    .page-container
 
     {
-        /* رفع الحد الأقصى للعرض لجعل العنصر أوسع على التابلت */
-        max-width: 70%;
-        /* إذا كان لديك سايدبار أو عناصر جانبية،
-               يمكنك ضبط العرض حسب المساحة المتبقية */
+    /* رفع الحد الأقصى للعرض لجعل العنصر أوسع على التابلت */
+    max-width: 70%;
+    /* إذا كان لديك سايدبار أو عناصر جانبية،
+    يمكنك ضبط العرض حسب المساحة المتبقية */
     }
 
     .input-box {
-        width: 60%;
-        padding: 1rem;
-        font-size: 1.2rem;
+    width: 60%;
+    padding: 1rem;
+    font-size: 1.2rem;
     }
 
     .save-button, .change-phone-button {
-        padding: 1rem 2rem;
-        font-size: 1.2rem;
+    padding: 1rem 2rem;
+    font-size: 1.2rem;
     }
 
     .info-message {
-        font-size: 1.1rem;
-        padding: 1rem;
+    font-size: 1.1rem;
+    padding: 1rem;
     }
 
     }
 
     /* تحسين الاستجابة لأجهزة أوسع (1024px فأعلى) */
     @@media (min-width: 1024px) {
-        .page-container
+    .page-container
 
     {
-        max-width: 50%; /* أو 900px إذا أردت قيمة ثابتة */
+    max-width: 50%; /* أو 900px إذا أردت قيمة ثابتة */
     }
 
     .input-box {
-        width: 50%;
-        padding: 1.2rem;
-        font-size: 1.3rem;
+    width: 50%;
+    padding: 1.2rem;
+    font-size: 1.3rem;
     }
 
     .save-button, .change-phone-button {
-        padding: 1.2rem 2.5rem;
-        font-size: 1.3rem;
+    padding: 1.2rem 2.5rem;
+    font-size: 1.3rem;
     }
 
     .info-message {
-        font-size: 1.2rem;
-        padding: 1.2rem;
+    font-size: 1.2rem;
+    padding: 1.2rem;
     }
 
     }
@@ -209,6 +209,8 @@
 </div>
 
 @code {
+    [Parameter]
+    public string RedirectURL { get; set; } 
     private string UserInput = "";
     private string UserName = "";
     private string VerificationCode = "";
@@ -289,7 +291,23 @@
                 PhoneService.DeletePhoneNumber();
             }
             PhoneService.SavePhoneNumber(UserInput);
-            NavigationManager.NavigateTo("/", true);
+            var uri = new Uri(NavigationManager.Uri);
+            var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+
+            if (query.TryGetValue("redirect", out var redirectUrl))
+            {
+                RedirectURL = redirectUrl;
+            }
+            if(string.IsNullOrEmpty(RedirectURL))
+            {
+                NavigationManager.NavigateTo("/", true);
+
+            }
+            else
+            {
+                NavigationManager.NavigateTo(RedirectURL, true);
+
+            }
         }
         else
         {
