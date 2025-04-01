@@ -45,7 +45,7 @@
       <AndroidPackageFormat>apk</AndroidPackageFormat>
 		<BlazorWebAssemblyEnableLinking>true</BlazorWebAssemblyEnableLinking>
 		<PublishTrimmed>true</PublishTrimmed>
-		<RunAOTCompilation>true</RunAOTCompilation>		<!-- ✳️ لازم تضيف هاي -->
+		<RunAOTCompilation>true</RunAOTCompilation>		
 	</PropertyGroup>
 	<ItemGroup>
 		<TrimmerRootDescriptor Include="LinkerConfig.xml" />
