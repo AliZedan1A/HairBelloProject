@@ -36,8 +36,14 @@ namespace ServerSide.Controllers
         [HttpGet("SendVerfy")]
         public async Task<IActionResult> SendVerfy([FromQuery] string PhonNumber,[FromQuery]string UserName)
         {
+            /*
             var model  = await _phonsender.SendVerfyCode(PhonNumber, UserName);
-            return model.IsSucceeded ? Ok(model) : BadRequest(model);
+            return model.IsSucceeded ? Ok(model) : BadRequest(model);*/
+            return BadRequest(new ServiceReturnModel<bool>()
+            {
+                IsSucceeded =false,
+                Comment = "قمنا بتعطيل خاصية ارسال كود جديد حتى نشر التطبيق ! |اٍذا كنت من مراجعين البرنامج - استخدم الكود السابق المرفق"
+            });
         }
         [HttpGet("GetAppStatus")]
         public async Task<IActionResult> GetAppStatus()

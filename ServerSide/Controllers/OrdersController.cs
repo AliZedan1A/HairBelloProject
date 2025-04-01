@@ -102,57 +102,69 @@ namespace ServerSide.Controllers
                 return BadRequest(model); 
             }
         }
+        private static readonly SemaphoreSlim _orderLock = new(1, 1);
 
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateOrderDto model)
         {
-            var availble = await  _repository.IsOrderTimeAvailble(model.BarberId, model.FromTime, model.ToTime, model.Date);
-            if(availble)
+            await _orderLock.WaitAsync();
+            try
             {
-                return BadRequest(new ServiceReturnModel<bool>()
+                var availble = await _repository.IsOrderTimeAvailble(model.BarberId, model.FromTime, model.ToTime, model.Date);
+                if (availble)
                 {
-                    IsSucceeded = false,
-                    Comment = "هذا الوقت تم حجزه الرجاء اختيار وقت اخر"
-
-                });
-            }
-
-            var IsOrder = await _repository.CanUserMakeOrder(model.PhonNumber);
-            if (!IsOrder.IsSucceeded)
-            {
-                return BadRequest(IsOrder);
-            }
-            var ret = await _userRepository.GetUserByPhonNumber(model.PhonNumber);
-            
-            if (ret.IsSucceeded)
-            {
-                var result = await _repository.InsertAsync(new()
-                {
-                    FromTime = model.FromTime,
-                    TotalPrice = model.TotalPrice,
-                    ToTime = model.ToTime,
-                    UserId = ret.Value.Id,
-                    Date = model.Date,
-                    IsCansled = false,
-                    BarberId = model.BarberId,
-                   
-                    OrderServices = model.Services.Select(x => new OrderServiceModel()
+                    return BadRequest(new ServiceReturnModel<bool>()
                     {
-                        ServiceId = x.ServiceId,
-                    }).ToList()
-                });
-                return result.IsSucceeded ? Ok(result) : BadRequest(result);
+                        IsSucceeded = false,
+                        Comment = "هذا الوقت تم حجزه الرجاء اختيار وقت اخر"
+
+                    });
+                }
+
+                var IsOrder = await _repository.CanUserMakeOrder(model.PhonNumber);
+                if (!IsOrder.IsSucceeded)
+                {
+                    return BadRequest(IsOrder);
+                }
+                var ret = await _userRepository.GetUserByPhonNumber(model.PhonNumber);
+                var r =await  _repository.OrderTime(model.BarberId, model.FromTime, model.ToTime, model.Date);
+                if (ret.IsSucceeded&&!r)
+                {
+
+                    var result = await _repository.InsertAsync(new()
+                    {
+                        FromTime = model.FromTime,
+                        TotalPrice = model.TotalPrice,
+                        ToTime = model.ToTime,
+                        UserId = ret.Value.Id,
+                        Date = model.Date,
+                        IsCansled = false,
+                        BarberId = model.BarberId,
+
+                        OrderServices = model.Services.Select(x => new OrderServiceModel()
+                        {
+                            ServiceId = x.ServiceId,
+                        }).ToList()
+                    });
+                    return result.IsSucceeded ? Ok(result) : BadRequest(result);
+                }
+                else
+                {
+                    return Unauthorized(new ServiceReturnModel<bool>()
+                    {
+                        IsSucceeded = false,
+                        Comment = ret.Comment
+
+                    });
+
+                }
             }
-            else
+            finally
             {
-                return Unauthorized(new ServiceReturnModel<bool>() { 
-                IsSucceeded= false,
-                Comment = ret.Comment   
-                
-                });
+                _orderLock.Release();
 
             }
-           
+
         }
 
         [HttpPut]

@@ -10,6 +10,8 @@
 @using Microsoft.AspNetCore.Components.Forms
 @using System.Net.Http.Headers
 @using System.IO
+@using System.Diagnostics
+@using System.Text.Json
 
 <div class="images-management-wrapper">
 
@@ -30,8 +32,8 @@
             }
         </div>
         <button class="btn primary"
-                @onclick="AddImage"
-                disabled="@(!CanAddNewImage)">
+        @onclick="AddImage"
+        disabled="@(!CanAddNewImage)">
             إضافة الصورة
         </button>
     </div>
@@ -50,9 +52,9 @@
             {
                 <div class="image-card">
                     <img src="@img.Base64Url"
-                         alt="صورة"
-                         class="image-thumbnail"
-                         @onclick="@(() => ShowLargeImage(img.Base64Url))" />
+                    alt="صورة"
+                    class="image-thumbnail"
+                    @onclick="@(() => ShowLargeImage(img.Base64Url))" />
 
                     <div class="card-actions">
                         <button class="btn danger" @onclick="@(() => DeleteImage(img.Id))">حذف</button>
@@ -75,8 +77,8 @@
             }
         </div>
         <button class="btn primary"
-                @onclick="AddVideo"
-                disabled="@(selectedVideoFile is null || isUploadingVideo)">
+        @onclick="AddVideo"
+        disabled="@(selectedVideoFile is null || isUploadingVideo)">
             رفع الفيديو
         </button>
         @if (isUploadingVideo)
@@ -112,27 +114,6 @@
         }
     </div>
 
-    <!-- نافذة تعديل الصورة (Modal) -->
-    @if (editingImageId != 0)
-    {
-        <div class="modal-backdrop">
-            <div class="modal-content">
-                <h4>تعديل الصورة</h4>
-
-                <InputFile OnChange="OnSelectEditImage" multiple="false" accept="image/*" />
-
-                @if (!string.IsNullOrWhiteSpace(editingImageBase64))
-                {
-                    <img src="@editingImageBase64" class="image-preview" alt="معاينة الصورة" />
-                }
-
-                <div class="modal-actions">
-                    <button class="btn success" @onclick="SaveEdit">حفظ</button>
-                    <button class="btn secondary" @onclick="CancelEdit">إلغاء</button>
-                </div>
-            </div>
-        </div>
-    }
 
     <!-- نافذة تكبير الصورة (Modal) -->
     @if (showLargeImage)
@@ -149,315 +130,315 @@
 <!-- سكريبت للتحقق من مدة الفيديو باستخدام JS interop -->
 <script>
     window.getVideoDuration = (inputElementId) => {
-        return new Promise((resolve, reject) => {
-            var input = document.getElementById(inputElementId);
-            if (input.files.length == 0) {
-                resolve(0);
-                return;
-            }
-            var file = input.files[0];
-            var url = URL.createObjectURL(file);
-            var video = document.createElement('video');
-            video.preload = 'metadata';
-            video.src = url;
-            video.onloadedmetadata = function () {
-                URL.revokeObjectURL(video.src);
-                resolve(video.duration);
-            };
-            video.onerror = function () {
-                reject("Error loading video metadata");
-            };
-        });
+    return new Promise((resolve, reject) => {
+    var input = document.getElementById(inputElementId);
+    if (input.files.length == 0) {
+    resolve(0);
+    return;
+    }
+    var file = input.files[0];
+    var url = URL.createObjectURL(file);
+    var video = document.createElement('video');
+    video.preload = 'metadata';
+    video.src = url;
+    video.onloadedmetadata = function () {
+    URL.revokeObjectURL(video.src);
+    resolve(video.duration);
+    };
+    video.onerror = function () {
+    reject("Error loading video metadata");
+    };
+    });
     };
 </script>
 
 <style>
     /* الحاوية العامة */
     .images-management-wrapper {
-        max-width: 600px;
-        margin: 1rem auto;
-        padding: 1rem;
-        background: #fff;
-        border-radius: 8px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-        animation: fadeInUp 0.4s ease;
+    max-width: 600px;
+    margin: 1rem auto;
+    padding: 1rem;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    animation: fadeInUp 0.4s ease;
     }
 
     @@keyframes fadeInUp {
-        from
+    from
 
     {
-        opacity: 0;
-        transform: translateY(10px);
+    opacity: 0;
+    transform: translateY(10px);
     }
 
     to {
-        opacity: 1;
-        transform: translateY(0);
+    opacity: 1;
+    transform: translateY(0);
     }
 
     }
 
     .title {
-        text-align: center;
-        font-size: 1.3rem;
-        margin-bottom: 0.5rem;
-        color: #333;
+    text-align: center;
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+    color: #333;
     }
 
     .subtitle {
-        text-align: center;
-        font-size: 0.9rem;
-        color: #666;
-        margin-bottom: 1.2rem;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 1.2rem;
     }
 
     /* أقسام إضافة الصور والفيديوهات */
     .add-image-section, .add-video-section {
-        margin-bottom: 1rem;
-        background: #fafafa;
-        padding: 0.8rem;
-        border-radius: 6px;
+    margin-bottom: 1rem;
+    background: #fafafa;
+    padding: 0.8rem;
+    border-radius: 6px;
     }
 
-        .add-image-section h4, .add-video-section h4 {
-            margin-bottom: 0.5rem;
-            color: #444;
-        }
+    .add-image-section h4, .add-video-section h4 {
+    margin-bottom: 0.5rem;
+    color: #444;
+    }
 
     .add-image-row, .add-video-row {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 0.8rem;
-        margin-bottom: 0.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 0.5rem;
     }
 
     .image-preview {
-        max-width: 100px;
-        max-height: 100px;
-        border-radius: 6px;
-        object-fit: cover;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    max-width: 100px;
+    max-height: 100px;
+    border-radius: 6px;
+    object-fit: cover;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
     }
 
     /* قائمة الصور */
     .images-list {
-        margin-top: 1rem;
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        gap: 1rem;
+    margin-top: 1rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 1rem;
     }
 
     /* قائمة الفيديوهات */
     .videos-list {
-        margin-top: 1rem;
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 1rem;
+    margin-top: 1rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
     }
 
     .no-data {
-        text-align: center;
-        font-style: italic;
-        color: #999;
+    text-align: center;
+    font-style: italic;
+    color: #999;
     }
 
     .image-card, .video-card {
-        background: #f9f9f9;
-        border-radius: 6px;
-        padding: 0.5rem;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        transition: background 0.2s;
+    background: #f9f9f9;
+    border-radius: 6px;
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transition: background 0.2s;
     }
 
-        .image-card:hover, .video-card:hover {
-            background: #f0f0f0;
-        }
+    .image-card:hover, .video-card:hover {
+    background: #f0f0f0;
+    }
 
     .image-thumbnail {
-        width: 100%;
-        height: auto;
-        border-radius: 4px;
-        cursor: pointer;
-        object-fit: cover;
-        margin-bottom: 0.5rem;
-        transition: transform 0.3s;
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+    cursor: pointer;
+    object-fit: cover;
+    margin-bottom: 0.5rem;
+    transition: transform 0.3s;
     }
 
     .video-thumbnail {
-        width: 100%;
-        height: auto;
-        border-radius: 4px;
-        object-fit: cover;
-        margin-bottom: 0.5rem;
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+    object-fit: cover;
+    margin-bottom: 0.5rem;
     }
 
     .image-thumbnail:hover {
-        transform: scale(1.02);
+    transform: scale(1.02);
     }
 
     .card-actions {
-        display: flex;
-        gap: 0.5rem;
+    display: flex;
+    gap: 0.5rem;
     }
 
     /* الأزرار */
     .btn {
-        border: none;
-        border-radius: 4px;
-        padding: 0.45rem 0.7rem;
-        font-size: 0.8rem;
-        cursor: pointer;
-        transition: transform 0.2s;
+    border: none;
+    border-radius: 4px;
+    padding: 0.45rem 0.7rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: transform 0.2s;
     }
 
-        .btn:hover {
-            transform: translateY(-2px);
-        }
+    .btn:hover {
+    transform: translateY(-2px);
+    }
 
     .primary {
-        background-color: #6200ee;
-        color: #fff;
+    background-color: #6200ee;
+    color: #fff;
     }
 
     .secondary {
-        background-color: #9e9e9e;
-        color: #fff;
+    background-color: #9e9e9e;
+    color: #fff;
     }
 
     .success {
-        background-color: #4caf50;
-        color: #fff;
+    background-color: #4caf50;
+    color: #fff;
     }
 
     .warning {
-        background-color: #ffca28;
-        color: #333;
+    background-color: #ffca28;
+    color: #333;
     }
 
     .danger {
-        background-color: #e53935;
-        color: #fff;
+    background-color: #e53935;
+    color: #fff;
     }
 
     /* شريط تحميل الفيديو */
     .upload-progress {
-        margin-top: 0.5rem;
-        background: #e0e0e0;
-        border-radius: 4px;
-        position: relative;
-        height: 20px;
-        width: 100%;
+    margin-top: 0.5rem;
+    background: #e0e0e0;
+    border-radius: 4px;
+    position: relative;
+    height: 20px;
+    width: 100%;
     }
 
     .progress-bar {
-        background: #6200ee;
-        height: 100%;
-        border-radius: 4px;
-        transition: width 0.3s;
+    background: #6200ee;
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s;
     }
 
     .upload-progress span {
-        position: absolute;
-        top: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: 0.8rem;
-        color: #fff;
-        line-height: 20px;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.8rem;
+    color: #fff;
+    line-height: 20px;
     }
 
     /* النافذة (Modal) */
     .modal-backdrop {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0,0,0,0.6);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 999;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
     }
 
     .modal-content {
-        background: #fff;
-        border-radius: 6px;
-        padding: 1rem;
-        max-width: 90%;
-        max-height: 80%;
-        display: flex;
-        flex-direction: column;
-        gap: 0.8rem;
-        overflow-y: auto;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-        animation: zoomIn 0.3s ease;
+    background: #fff;
+    border-radius: 6px;
+    padding: 1rem;
+    max-width: 90%;
+    max-height: 80%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    overflow-y: auto;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    animation: zoomIn 0.3s ease;
     }
 
     @@keyframes zoomIn {
-        from
+    from
 
     {
-        transform: scale(0.9);
-        opacity: 0;
+    transform: scale(0.9);
+    opacity: 0;
     }
 
     to {
-        transform: scale(1);
-        opacity: 1;
+    transform: scale(1);
+    opacity: 1;
     }
 
     }
 
     .modal-actions {
-        display: flex;
-        gap: 0.5rem;
+    display: flex;
+    gap: 0.5rem;
     }
 
     .large-image-modal {
-        align-items: center;
+    align-items: center;
     }
 
     .large-view {
-        max-width: 90vw;
-        max-height: 70vh;
-        border-radius: 6px;
-        object-fit: contain;
-        margin-bottom: 1rem;
+    max-width: 90vw;
+    max-height: 70vh;
+    border-radius: 6px;
+    object-fit: contain;
+    margin-bottom: 1rem;
     }
 
     /* استجابة للشاشات الأصغر */
     @@media (max-width: 600px) {
-        .images-management-wrapper
+    .images-management-wrapper
 
     {
-        margin: 0.5rem;
-        padding: 0.8rem;
+    margin: 0.5rem;
+    padding: 0.8rem;
     }
 
     .add-image-row, .add-video-row {
-        flex-direction: column;
-        align-items: flex-start;
+    flex-direction: column;
+    align-items: flex-start;
     }
 
     .image-preview {
-        max-width: 80px;
-        max-height: 80px;
+    max-width: 80px;
+    max-height: 80px;
     }
 
     .images-list {
-        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-        gap: 0.8rem;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 0.8rem;
     }
 
     .large-view {
-        max-width: 95vw;
-        max-height: 60vh;
+    max-width: 95vw;
+    max-height: 60vh;
     }
 
     }
@@ -473,10 +454,6 @@
     private string newImageBase64;            // للمعاينة فقط
     private bool CanAddNewImage => !string.IsNullOrWhiteSpace(newImageBase64);
 
-    // ======== إدارة تعديل الصورة ========
-    private int editingImageId;
-    private IBrowserFile editingImageFile;     // الملف المختار للتعديل
-    private string editingImageBase64;        // للمعاينة فقط
 
     // ======== تكبير الصورة ========
     private bool showLargeImage;
@@ -525,18 +502,22 @@
     /* ===================== عند اختيار صورة جديدة ===================== */
     private async Task OnSelectNewImage(InputFileChangeEventArgs e)
     {
+        Debug.WriteLine("test");
         var file = e.File;
         if (file != null)
         {
+            Debug.WriteLine("test");
+
             if (!file.ContentType.StartsWith("image/"))
             {
                 _Alert.ShowAlert("الرجاء اختيار ملف صورة فقط!", AlertType.Error);
                 return;
             }
+            Debug.WriteLine("test");
 
-            // لأغراض المعاينة فقط نحولها إلى Base64
             using var ms = new MemoryStream();
             await file.OpenReadStream(5 * 1024 * 1024).CopyToAsync(ms);
+            Debug.WriteLine("test");
 
             newImageBase64 = $"data:{file.ContentType};base64,{Convert.ToBase64String(ms.ToArray())}";
             newImageFile = file;
@@ -548,20 +529,18 @@
     {
         if (newImageFile is not null)
         {
-            // نبني MultipartFormDataContent
             var content = new MultipartFormDataContent();
             using var stream = newImageFile.OpenReadStream(5 * 1024 * 1024);
             var streamContent = new StreamContent(stream);
             streamContent.Headers.ContentType = new MediaTypeHeaderValue(newImageFile.ContentType);
-
-            // (اسم الحقل) يجب أن يكون بنفس ما ينتظره السيرفر
             content.Add(streamContent, "File", newImageFile.Name);
-
             var req = new CreatePreviewImageDto
                 {
                     File = content
                 };
 
+
+ 
             var result = await _ImageService.AddImage(req);
             if (result.IsSucceeded)
             {
@@ -602,72 +581,9 @@
     // }
 
     /* ===================== عند اختيار صورة جديدة أثناء التعديل ===================== */
-    private async Task OnSelectEditImage(InputFileChangeEventArgs e)
-    {
-        var file = e.File;
-        if (file != null)
-        {
-            if (!file.ContentType.StartsWith("image/"))
-            {
-                _Alert.ShowAlert("الرجاء اختيار ملف صورة فقط!", AlertType.Error);
-                return;
-            }
+    
 
-            using var ms = new MemoryStream();
-            await file.OpenReadStream(5 * 1024 * 1024).CopyToAsync(ms);
-
-            editingImageBase64 = $"data:{file.ContentType};base64,{Convert.ToBase64String(ms.ToArray())}";
-            editingImageFile = file;
-        }
-    }
-
-    /* ===================== حفظ التعديل ===================== */
-    private async Task SaveEdit()
-    {
-        if (editingImageId > 0 && editingImageFile != null)
-        {
-            // نبني الـ MultipartFormDataContent مع الملف الجديد
-            var content = new MultipartFormDataContent();
-            using var stream = editingImageFile.OpenReadStream(5 * 1024 * 1024);
-            var streamContent = new StreamContent(stream);
-            streamContent.Headers.ContentType = new MediaTypeHeaderValue(editingImageFile.ContentType);
-            content.Add(streamContent, "File", editingImageFile.Name);
-
-            var req = new UpdatePreviewImageDto
-                {
-                    Id = editingImageId,
-                    File = content
-                };
-
-            var result = await _ImageService.EditImage(req);
-            if (result.IsSucceeded)
-            {
-                _Alert.ShowAlert("تم تعديل الصورة بنجاح", AlertType.Success);
-                editingImageId = 0;
-                editingImageBase64 = string.Empty;
-                editingImageFile = null;
-                await LoadImages();
-            }
-            else
-            {
-                _Alert.ShowAlert(result.Comment ?? "فشل في تعديل الصورة", AlertType.Error);
-            }
-        }
-        else
-        {
-            // في حال لم يتم اختيار ملف جديد، يمكن إما تجاهل الحفظ أو وضع منطق آخر
-            editingImageId = 0;
-            editingImageBase64 = string.Empty;
-            editingImageFile = null;
-        }
-    }
-
-    private void CancelEdit()
-    {
-        editingImageId = 0;
-        editingImageBase64 = string.Empty;
-        editingImageFile = null;
-    }
+   
 
     /* ===================== تكبير الصورة ===================== */
     private void ShowLargeImage(string base64Url)
