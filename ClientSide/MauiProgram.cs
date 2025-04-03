@@ -17,10 +17,9 @@ namespace ClientSide
                 });
             builder.Services.AddHttpClient("Server", client =>
             {
-                client.BaseAddress = new Uri("https://hairbello.site/api/");
-                client.DefaultRequestHeaders.Add("VLToken", "c1z342adfv65qfzl156z");
+                client.BaseAddress = new Uri("/");
+                client.DefaultRequestHeaders.Add("", "");
             });
-            //                client.BaseAddress = new Uri("https://hairbello.site/api/");
 
             builder.Services.AddScoped<IBarberService, BarberService>();
             builder.Services.AddScoped<IBarberSchedule,BarberSchedule>();
