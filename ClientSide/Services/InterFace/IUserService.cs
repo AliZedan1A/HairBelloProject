@@ -16,5 +16,6 @@ namespace ClientSide.Services.InterFace
         public Task<ServiceReturnModel<bool>> InsertUser(CreateUserDto req);
         public Task<ServiceReturnModel<bool>> CheckCode(string PhonNumber, string code);
         public Task<ServiceReturnModel<bool>> SendValidtion(string PhonNumber,string UserName);
+        public Task<ServiceReturnModel<bool>> DeleteAccount(string PhonNumber);
     }
 }

@@ -50,7 +50,7 @@ namespace ServerSide.Controllers
                     }
 
                 }
-                if (model.Value.IsInBreak && model.Value.StartBreak < dateTimeService.IsraelNow())
+                if (model.Value.IsInBreak && model.Value.StartBreak < dateTimeService.IsraelNow()&& model.Value.EndBreak.Date > Date.Date)
                 {
                     return BadRequest(new ServiceReturnModel<List<AvailableSlotModel>>() {
                     Comment = "هذا الحلاق  في استراحة  لا يمكنك حجز عنده",

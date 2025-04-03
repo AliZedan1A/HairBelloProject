@@ -22,7 +22,7 @@
         <Nullable>enable</Nullable>
 
         <!-- Display name -->
-        <ApplicationTitle>HairBello</ApplicationTitle>
+        <ApplicationTitle>Hair Bello</ApplicationTitle>
 
         <!-- App Identifier -->
         <ApplicationId>com.hairbello.site</ApplicationId>
@@ -53,9 +53,9 @@
   <PropertyGroup Condition="$(TargetFramework.Contains('-ios')) and '$(Configuration)' == 'Release'">
        <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
 	    <MauiIOSAppManifest>Platforms/iOS/Info.plist</MauiIOSAppManifest>
-	    <PublishTrimmed>true</PublishTrimmed>
-	    <TrimMode>copyused</TrimMode>
-	    <EnableTrimAnalyzer>false</EnableTrimAnalyzer>
+	  <BlazorWebAssemblyEnableLinking>true</BlazorWebAssemblyEnableLinking>
+	  <PublishTrimmed>true</PublishTrimmed>
+	  <RunAOTCompilation>true</RunAOTCompilation>
 	  <RuntimeIdentifier>ios-arm64</RuntimeIdentifier>
         <CodesignKey>Apple Distribution: Rashed Asaad (R832A7366Q)</CodesignKey>
         <CodesignProvision>hairbello</CodesignProvision>

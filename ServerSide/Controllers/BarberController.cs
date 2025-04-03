@@ -43,6 +43,7 @@ namespace ServerSide.Controllers
                 model.Value.StartBreak = req.StartBreak;
                 model.Value.EndBreak = req.EndBreak;
                 model.Value.IsInBreak = true;
+
                 var Res =  await _repository.UpdateAsync(model.Value);
                 return Res.IsSucceeded ? Ok(Res) : BadRequest(Res);
             }

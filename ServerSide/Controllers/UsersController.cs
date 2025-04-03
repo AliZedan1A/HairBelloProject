@@ -26,6 +26,19 @@ namespace ServerSide.Controllers
             _phonsender = phonSender;
             _configrepo = configrepo;
         }
+        [HttpDelete("DeleteAccount")]
+        public async Task<IActionResult> DeleteAccount([FromQuery] string PhonNumber)
+        {
+           var result = await  _repository.DeleteUser(PhonNumber);
+            if (result.IsSucceeded)
+            {
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
+        }
         [HttpGet("IsCodeAvailble")]
         public async Task<IActionResult> IsCodeAvailble([FromQuery] string PhonNumber,[FromQuery]string Code)
         {
@@ -36,14 +49,14 @@ namespace ServerSide.Controllers
         [HttpGet("SendVerfy")]
         public async Task<IActionResult> SendVerfy([FromQuery] string PhonNumber,[FromQuery]string UserName)
         {
-            /*
-            var model  = await _phonsender.SendVerfyCode(PhonNumber, UserName);
-            return model.IsSucceeded ? Ok(model) : BadRequest(model);*/
-            return BadRequest(new ServiceReturnModel<bool>()
-            {
-                IsSucceeded =false,
-                Comment = "قمنا بتعطيل خاصية ارسال كود جديد حتى نشر التطبيق ! |اٍذا كنت من مراجعين البرنامج - استخدم الكود السابق المرفق"
-            });
+
+            var model = await _phonsender.SendVerfyCode(PhonNumber, UserName);
+            return model.IsSucceeded ? Ok(model) : BadRequest(model);
+            //return BadRequest(new ServiceReturnModel<bool>()
+            //{
+            //    IsSucceeded =false,
+            //    Comment = "قمنا بتعطيل خاصية ارسال كود جديد حتى نشر التطبيق ! |اٍذا كنت من مراجعين البرنامج - استخدم الكود السابق المرفق"
+            //});
         }
         [HttpGet("GetAppStatus")]
         public async Task<IActionResult> GetAppStatus()

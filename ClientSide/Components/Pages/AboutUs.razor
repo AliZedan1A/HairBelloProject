@@ -4,6 +4,7 @@
 @using ClientSide.Services.InterFace
 @using Domain.DatabaseModels
 @using System.Diagnostics
+
 @inject IBarberService BarberService
 @inject IImageService _Video
 @inject IJSRuntime js
@@ -124,7 +125,6 @@
             background-color: #f2f2f2;
         }
 
-    /* حقوق المبرمج */
     .developer-rights {
         text-align: center;
         font-size: 0.8rem;
@@ -132,6 +132,16 @@
         margin-top: 1rem;
     }
 
+    .policy-link {
+        color: #555;
+        text-decoration: underline;
+        margin-right: 5px;
+        transition: color 0.2s ease;
+    }
+
+        .policy-link:hover {
+            color: #000;
+        }
     @@keyframes fadeIn {
         from
 
@@ -349,7 +359,9 @@
     <!-- حقوق المبرمج -->
     <div class="developer-rights">
         &copy; حقوق المبرمج: علي زيدان
+        | <a href="/https://raw.githubusercontent.com/rashedasaad/fargo-Policies/refs/heads/main/hair-bello-policy" target="_blank" class="policy-link">سياسة الخصوصية</a>
     </div>
+
 </div>
 
 <script>

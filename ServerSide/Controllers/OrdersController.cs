@@ -14,12 +14,14 @@ namespace ServerSide.Controllers
     {
         private readonly OrderRepository _repository;
         private readonly UserRepository _userRepository;
+        private readonly PhonSenderService phonService;
         private readonly DateTimeService _dateService;
 
-        public OrdersController(OrderRepository repository, DateTimeService timeService,UserRepository userRepository)
+        public OrdersController(OrderRepository repository, DateTimeService timeService,UserRepository userRepository, PhonSenderService PhonService)
         {
             _repository = repository;
             _userRepository = userRepository;
+            phonService = PhonService;
             _dateService = timeService;
         }
         
@@ -93,8 +95,9 @@ namespace ServerSide.Controllers
                 }
 
                 model.Value.IsCansled = true;
-                var retedit = await _repository.UpdateAsync(model.Value);
-                return retedit.IsSucceeded ? Ok(retedit) : BadRequest(retedit);
+                var UpdateResponse = await _repository.UpdateAsync(model.Value);
+               return UpdateResponse.IsSucceeded ? Ok(UpdateResponse) : BadRequest(UpdateResponse);
+
 
             }
             else
@@ -146,6 +149,10 @@ namespace ServerSide.Controllers
                             ServiceId = x.ServiceId,
                         }).ToList()
                     });
+                    if (result.IsSucceeded)
+                    {
+                       await phonService.SendOrderCreated(model.Date,model.FromTime,model.PhonNumber,model.BarberId);
+                    }
                     return result.IsSucceeded ? Ok(result) : BadRequest(result);
                 }
                 else

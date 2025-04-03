@@ -16,13 +16,62 @@ namespace ServerSide.Services
         private readonly UserRepository _userRepository;
         private readonly OrderRepository _orderRepository;
         private readonly DateTimeService _dateService;
+        private readonly BarberRepository barbers;
         private readonly WhatsappService _whisappService;
-        public PhonSenderService(UserRepository userRepository,WhatsappService whatsappService,OrderRepository orderRepository, DateTimeService IsraelTime)
+        public PhonSenderService(UserRepository userRepository,WhatsappService whatsappService,OrderRepository orderRepository, DateTimeService IsraelTime,BarberRepository barbers)
         {
             _userRepository = userRepository;
             _dateService=IsraelTime;
+            this.barbers = barbers;
             _orderRepository = orderRepository;
             _whisappService = whatsappService;
+        }
+        public async Task<ServiceReturnModel<bool>> SendOrderCreated(DateTime Date , DateTime Time,string PhonNumber,int barberid)
+        {
+            string pattern = @"^(?:0)?(\d{2})(\d{3})(\d{4})$";
+            string replacement = "$1-$2-$3";
+
+            string result = Regex.Replace(PhonNumber, pattern, replacement);
+
+            if (!Regex.IsMatch(PhonNumber, @"^\d{10}$"))
+            {
+                return new ServiceReturnModel<bool>()
+                {
+                    IsSucceeded = false,
+                    Comment = "رقم الهاتف يجب أن يحتوي على 10 أرقام فقط"
+                };
+
+              
+            }
+            string datvald = $"{Date.Day}/{Date.Month}/{Date.Year}";
+            string Message = @$"Hair Bello تم حجز دور عند 
+ في تاريخ: {datvald}
+ في تمام الساعة ال: {Time.TimeOfDay.ToString("")}";
+
+            var model =  _whisappService.Send("+972-" + result, Message);
+            //if (!model.IsSucceeded)
+            //{
+            //    return model;
+            //}
+           
+            var Barver = await barbers.GetAsync(barberid);
+            var user =await _userRepository.GetUserByPhonNumber(PhonNumber);
+            if (Barver.IsSucceeded&&user.IsSucceeded)
+            {
+                string AdminMessage = @$"Hair Bello تم حجز دور في 
+ في تاريخ: {Date.ToShortDateString()}
+ في تمام الساعة ال: {Time.TimeOfDay.ToString("")}
+عند الحلاق: {Barver.Value.Name}
+رقم المستخدم : {PhonNumber}
+اسم المستخدم : {user.Value.Name}
+
+";
+                var model1 = _whisappService.Send("+972-" + "50-446-6866", AdminMessage);
+            }
+            return new ServiceReturnModel<bool>()
+            {
+                IsSucceeded = true,
+            };
         }
         public async Task<ServiceReturnModel<bool>> CheckCode(string phoneNumber , string code)
         {

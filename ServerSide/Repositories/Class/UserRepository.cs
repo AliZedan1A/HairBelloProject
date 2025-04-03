@@ -2,13 +2,40 @@
 using Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using ServerSide.Database;
-using Twilio.TwiML.Voice;
+
 
 namespace ServerSide.Repositories.Class
 {
     public class UserRepository : Repository<UserModel>
     {
         private readonly ApplicationDbContext _context;
+
+        public async Task<ServiceReturnModel<bool>> DeleteUser(string phon)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.PhoneNumber == phon);
+            if(user is null) return new ServiceReturnModel<bool>(){
+                IsSucceeded = false,
+                Comment = "المستخدم غير موجود"
+            }; 
+            var Service =  await DeleteAsync(user.Id);
+            if (Service.IsSucceeded)
+            {
+                return new()
+                {
+                    IsSucceeded = true,
+
+                };
+            }
+            else
+            {
+                return new()
+                {
+                    IsSucceeded = false,
+                    Comment = Service.Comment
+
+                };
+            }
+        }
 
         public async Task<ServiceReturnModel<UserModel>> GetUserByPhonNumber(string PhonNumber)
         {

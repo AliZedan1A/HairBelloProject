@@ -111,5 +111,12 @@ namespace ClientSide.Services.Class
             var response = await client.GetAsync($"Users/SendVerfy?PhonNumber={PhonNumber}&UserName={UserName}");
             return await HandleResponse<bool>(response);
         }
+
+        public async Task<ServiceReturnModel<bool>> DeleteAccount(string PhonNumber)
+        {
+            var client = _httpclient.CreateClient("Server");
+            var response = await client.GetAsync($"Users/DeleteAccount?PhonNumber={PhonNumber}");
+            return await HandleResponse<bool>(response);
+        }
     }
 }

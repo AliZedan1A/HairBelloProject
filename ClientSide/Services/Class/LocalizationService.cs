@@ -78,8 +78,15 @@ public class LocalizationService
                 {"nav-home", "الرئيسية"},
                 {"nav-Welcome", "مرحباً"},
                 {"nav-Admin", "لوحة الإدارة"},
-                {"nav-About", "عن المحلقة"}
-
+                {"nav-About", "عن المحلقة"},
+                { "Settings-Title", "الإعدادات" },
+                { "DeleteAccount", "حذف الحساب" },
+                { "Logout", "تسجيل الخروج" },
+                { "DeleteConfirmText", "اٍذا كنت متأكد من أنك تريد حذف الحساب - اٍضغط مرة اخرى" },
+                { "DeleteSuccess", "لقد تم إلغاء تفعيل حسابك - يمكنك الذهاب وإعادة تسجيل الدخول" },
+                { "DeleteFail", "فشل إرسال طلب حذف الحساب - قم بالتواصل مع مالك التطبيق" },
+                { "LogoutSuccess", "لقد تم تسجيل خروجك من الحساب - يمكنك إعادة تسجيل الدخول" },
+                { "SettingNav", "الاعدادات" }
 
 
             }
@@ -153,7 +160,16 @@ public class LocalizationService
                 {"nav-home", "דף הבית"},
                 {"nav-Welcome", "ברוך הבא"},
                 {"nav-Admin", "לוח הניהול"},
-                {"nav-About", "אודות המספרה"}
+                {"nav-About", "אודות המספרה"},
+                { "Settings-Title", "הגדרות" },
+                { "DeleteAccount", "מחיקת החשבון" },
+                { "Logout", "התנתקות" },
+                { "DeleteConfirmText", "אם אתה בטוח שברצונך למחוק את החשבון - לחץ שוב" },
+                { "DeleteSuccess", "החשבון שלך בוטל - תוכל להתחבר מחדש בכל עת" },
+                { "DeleteFail", "נכשל בבקשת מחיקת החשבון - אנא פנה לבעל האפליקציה" },
+                { "LogoutSuccess", "התנתקת מהחשבון - תוכל להתחבר מחדש" },
+                { "SettingNav", "הגדרות" }
+
                 }
         }
     };

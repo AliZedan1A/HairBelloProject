@@ -38,9 +38,6 @@ namespace ServerSide.Controllers
             var result = await _repository.AddImage(file);
             return result.IsSucceeded ? Ok(result) : BadRequest(result);
         }
-
-      
-
         [HttpGet("GetVideos")]
         public async Task<IActionResult> GetVideos()
         {
