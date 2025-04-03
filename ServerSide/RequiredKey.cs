@@ -14,7 +14,7 @@ namespace ServerSide
 
             if (context.HttpContext?.Request.Headers.TryGetValue("VLToken", out var z) == true)
             {
-                if (z == "c1z342adfv65qfzl156z")
+                if (z == "")
                 {
                     await next();
                     return;
